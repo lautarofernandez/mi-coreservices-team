@@ -1,5 +1,5 @@
 
-<table border="0">
+<table border="0" style="border: 0px solid black">
 <tr>
 <td style="vertical-align: bottom">
 <img src="logo.png" alt="Logo MercadoPago"/>
