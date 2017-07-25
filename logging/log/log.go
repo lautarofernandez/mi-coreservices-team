@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/coreservices-team/logging/metrics"
+	"github.com/mercadolibre/coreservices-team/logging/metrics"
 )
 
 const (

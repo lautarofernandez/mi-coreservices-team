@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/coreservices-team/logging/format"
 	"github.com/gin-gonic/gin"
+	"github.com/mercadolibre/coreservices-team/logging/format"
 	"github.com/mercadolibre/go-meli-toolkit/gingonic/mlhandlers"
 	"github.com/mercadolibre/go-meli-toolkit/godog"
 )
