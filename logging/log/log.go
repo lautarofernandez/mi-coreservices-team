@@ -2,9 +2,10 @@ package log
 
 import (
 	"fmt"
-    "github.com/mcmeli/logging/metrics"
 	"os"
 	"strings"
+
+	"github.com/coreservices-team/logging/metrics"
 )
 
 const (

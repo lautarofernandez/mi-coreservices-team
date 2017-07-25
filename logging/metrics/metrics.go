@@ -1,15 +1,15 @@
 package metrics
 
 import (
+	"errors"
 	"fmt"
-    "github.com/mcmeli/logging/format"
-	"github.com/mercadolibre/go-meli-toolkit/gingonic/mlhandlers"
-	"github.com/mercadolibre/go-meli-toolkit/godog"
-	"github.com/newrelic/go-agent"
-	"gopkg.in/gin-gonic/gin.v1"
 	"os"
 	"time"
-    "errors"
+
+	"github.com/coreservices-team/logging/format"
+	"github.com/gin-gonic/gin"
+	"github.com/mercadolibre/go-meli-toolkit/gingonic/mlhandlers"
+	"github.com/mercadolibre/go-meli-toolkit/godog"
 )
 
 type Metric struct {
@@ -100,7 +100,7 @@ func PushMetric(metric Metric, trx *Transaction, tags ...string) error {
 		godog.RecordCompoundMetric(name, metric.Value, tags...)
 	case ERROR:
 		if trx != nil {
-            fmt.Println("Sending error")
+			fmt.Println("Sending error")
 			trx.NoticeError(name)
 		}
 		godog.RecordSimpleMetric(name, float64(1), tags...)
@@ -115,7 +115,7 @@ func GingonicHandlers() []gin.HandlerFunc {
 }
 
 func InitNewRelic(debug bool, environment string, appName string, appKey string) error {
-    fmt.Println(environment)
+	fmt.Println(environment)
 	config := newrelic.NewConfig(fmt.Sprintf("%s.%s", environment, appName), appKey)
 	if debug {
 		config.Logger = newrelic.NewDebugLogger(os.Stdout)
@@ -148,9 +148,9 @@ func (trx *Transaction) Segment(name string) *Segment {
 }
 
 func (trx *Transaction) NoticeError(name string) {
-    if trx.nrTrx != nil {
-        trx.nrTrx.NoticeError(errors.New(name))
-    }
+	if trx.nrTrx != nil {
+		trx.nrTrx.NoticeError(errors.New(name))
+	}
 }
 
 func (trx *Transaction) End() {
