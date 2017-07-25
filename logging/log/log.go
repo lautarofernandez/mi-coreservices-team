@@ -220,6 +220,10 @@ func WithContext(tags Tags) logContext {
 	return logContext{tags: tags}
 }
 
+func WithEventContext(eventName string) logContext {
+	return logContext{tags: Tags{"event": eventName}}
+}
+
 func (context logContext) WithContext(tags Tags) logContext {
 	return logContext{tags: context.tags.merge(tags)}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/mercadolibre/coreservices-team/logging/format"
 	"github.com/mercadolibre/go-meli-toolkit/gingonic/mlhandlers"
 	"github.com/mercadolibre/go-meli-toolkit/godog"
+	"github.com/newrelic/go-agent"
 )
 
 type Metric struct {
