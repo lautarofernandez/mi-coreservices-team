@@ -52,7 +52,7 @@ func SetLevelFromEnv() bool {
 	return false
 }
 
-func (context logContext) Error(value interface{}, eventsAndTags ...interface{}) error {
+func (context LogContext) Error(value interface{}, eventsAndTags ...interface{}) error {
 	err := fmt.Errorf("%v", value)
 	if Level <= ERROR {
 		context.Log("error", fmt.Sprintf("%s", err), eventsAndTags...)
@@ -60,7 +60,7 @@ func (context logContext) Error(value interface{}, eventsAndTags ...interface{})
 	return err
 }
 
-func (context logContext) Critic(value interface{}, eventsAndTags ...interface{}) error {
+func (context LogContext) Critic(value interface{}, eventsAndTags ...interface{}) error {
 	err := fmt.Errorf("%v", value)
 	if Level <= CRITIC {
 		context.Log("critic", fmt.Sprintf("%s", err), eventsAndTags...)
@@ -68,7 +68,7 @@ func (context logContext) Critic(value interface{}, eventsAndTags ...interface{}
 	return err
 }
 
-func (context logContext) Errorf(format string, a ...interface{}) error {
+func (context LogContext) Errorf(format string, a ...interface{}) error {
 	err := fmt.Errorf(format, a...)
 	if Level <= ERROR {
 		context.Log("error", fmt.Sprintf("%s", err))
@@ -76,42 +76,42 @@ func (context logContext) Errorf(format string, a ...interface{}) error {
 	return err
 }
 
-func (context logContext) Info(value interface{}, eventsAndTags ...interface{}) {
+func (context LogContext) Info(value interface{}, eventsAndTags ...interface{}) {
 	if Level > INFO {
 		return
 	}
 	context.Log("info", fmt.Sprintf("%v", value), eventsAndTags...)
 }
 
-func (context logContext) Debug(value interface{}, eventsAndTags ...interface{}) {
+func (context LogContext) Debug(value interface{}, eventsAndTags ...interface{}) {
 	if Level > DEBUG {
 		return
 	}
 	context.Log("debug", fmt.Sprintf("%v", value), eventsAndTags...)
 }
 
-func (context logContext) Trace(value interface{}, eventsAndTags ...interface{}) {
+func (context LogContext) Trace(value interface{}, eventsAndTags ...interface{}) {
 	if Level > TRACE {
 		return
 	}
 	context.Log("trace", fmt.Sprintf("%v", value), eventsAndTags...)
 }
 
-func (context logContext) Metric(value interface{}, eventsAndTags ...interface{}) {
+func (context LogContext) Metric(value interface{}, eventsAndTags ...interface{}) {
 	if Level > METRICS {
 		return
 	}
 	context.Log("metric", fmt.Sprintf("%v", value), eventsAndTags...)
 }
 
-func (context logContext) Transaction(name string) logContext {
+func (context LogContext) Transaction(name string) LogContext {
 	if pushMetrics {
-		return logContext{tags: context.tags, transaction: metrics.Trx(name)}
+		return LogContext{tags: context.tags, transaction: metrics.Trx(name)}
 	}
 	return context
 }
 
-func (context logContext) StartSegment(name string) *metrics.Segment {
+func (context LogContext) StartSegment(name string) *metrics.Segment {
 	context.Metric(fmt.Sprintf("Segment \"%s\" started", name))
 	if context.transaction != nil {
 		return context.transaction.Segment(name)
@@ -119,13 +119,13 @@ func (context logContext) StartSegment(name string) *metrics.Segment {
 	return metrics.NullSegment()
 }
 
-func (context logContext) EndTransaction() {
+func (context LogContext) EndTransaction() {
 	if context.transaction != nil {
 		context.transaction.End()
 	}
 }
 
-func (context logContext) Log(level string, message string, eventsAndTags ...interface{}) {
+func (context LogContext) Log(level string, message string, eventsAndTags ...interface{}) {
 	var tags = Tags{}
 	var metric metrics.Metrics // TODO: merge multiple metrics
 	if len(eventsAndTags) > 0 {
@@ -177,12 +177,12 @@ func (tags Tags) merge(other Tags) Tags {
 	return merged
 }
 
-type logContext struct {
+type LogContext struct {
 	transaction *metrics.Transaction
 	tags        Tags
 }
 
-var defaultContext = logContext{tags: Tags{}}
+var defaultContext = LogContext{tags: Tags{}}
 
 func Error(value interface{}, eventsAndTags ...interface{}) error {
 	return defaultContext.Error(value, eventsAndTags...)
@@ -212,20 +212,20 @@ func Metric(value interface{}, eventsAndTags ...interface{}) {
 	defaultContext.Metric(value, eventsAndTags...)
 }
 
-func Transaction(name string) logContext {
+func Transaction(name string) LogContext {
 	return defaultContext.Transaction(name)
 }
 
-func WithContext(tags Tags) logContext {
-	return logContext{tags: tags}
+func WithContext(tags Tags) LogContext {
+	return LogContext{tags: tags}
 }
 
-func WithEventContext(eventName string) logContext {
-	return logContext{tags: Tags{"event": eventName}}
+func WithEventContext(eventName string) LogContext {
+	return LogContext{tags: Tags{"event": eventName}}
 }
 
-func (context logContext) WithContext(tags Tags) logContext {
-	return logContext{tags: context.tags.merge(tags)}
+func (context LogContext) WithContext(tags Tags) LogContext {
+	return LogContext{tags: context.tags.merge(tags)}
 }
 
 func PushMetrics(prefix string) {
