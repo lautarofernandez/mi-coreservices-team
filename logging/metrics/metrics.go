@@ -144,6 +144,10 @@ func Trx(id string) *Transaction {
 	return &Transaction{nrTrx}
 }
 
+func TrxWithTransaction(nrTrx newrelic.Transaction) *Transaction {
+	return &Transaction{nrTrx}
+}
+
 func (trx *Transaction) Segment(name string) *Segment {
 	return &Segment{newrelic.StartSegment(trx.nrTrx, name)}
 }
