@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mercadolibre/go-meli-toolkit/babel/babel/scanner"
+	"github.com/mercadolibre/coreservices-team/babel/babel/scanner"
 	"github.com/spf13/cobra"
 )
 
