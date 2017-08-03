@@ -239,6 +239,13 @@ func WithEventContext(eventName string) LogContext {
 	return LogContext{tags: Tags{"event": eventName}}
 }
 
+func WithEventRequestContext(eventName string, ginContext *gin.Context) LogContext {
+	requestId := ginContext.MustGet("RequestId")
+	context := WithEventContext(eventName)
+	context.tags = context.tags.merge(Tags{"requestId": requestId})
+	return context
+}
+
 func (context LogContext) WithContext(tags Tags) LogContext {
 	return LogContext{tags: context.tags.merge(tags)}
 }
