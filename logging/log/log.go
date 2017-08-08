@@ -240,9 +240,12 @@ func WithEventContext(eventName string) LogContext {
 }
 
 func WithEventRequestContext(eventName string, ginContext *gin.Context) LogContext {
-	requestId := ginContext.MustGet("RequestId")
 	context := WithEventContext(eventName)
-	context.tags = context.tags.merge(Tags{"requestId": requestId})
+	context.tags = context.tags.merge(Tags{
+		"requestId": ginContext.MustGet("RequestId"),
+		"method":    ginContext.Request.Method,
+		"path":      ginContext.Request.URL.Path,
+		"header":    fmt.Sprintf("%v", ginContext.Request.Header)})
 	return context
 }
 
