@@ -69,4 +69,5 @@ Changelog
 Author
 ---
 
-Fernando Russ (`fernando.russ@mercadolibre.com)
+Core Services Team (`coreservices@mercadolibre.com`)
+Slack (`https://mercadopago-team.slack.com/messages/C45S2LB5K`)
