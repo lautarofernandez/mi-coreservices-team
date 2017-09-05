@@ -76,6 +76,12 @@ var (
 		Literal:   "InternalServerApiError",
 		Alertable: true,
 	}
+
+	BadGatewayApiError = ErrorCode{
+		Status:    http.StatusBadGateway,
+		Literal:   "BadGatewayApiError",
+		Alertable: true,
+	}
 )
 
 func ReturnError(c *gin.Context, err *Error) {
