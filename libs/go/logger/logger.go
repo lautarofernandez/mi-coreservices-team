@@ -108,5 +108,5 @@ func (l *Logger) Warning(event string, attrs ...Attrs) *Logger {
 }
 
 func (l *Logger) Info(event string, attrs ...Attrs) *Logger {
-	return l.LogWithLevel(StatusWarning, event, attrs...)
+	return l.LogWithLevel(StatusInfo, event, attrs...)
 }
