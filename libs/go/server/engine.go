@@ -93,6 +93,14 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 
 	group.Use(ginrequestid.RequestId())
 
+	// Add authentication middleware, but only if not on indexer role.
+	// When on indexer role, requests are being called by BigQ, and in this
+	// scenario there's not authentication present (no caller ID nor scopes).
+	// If this middleware is run under this conditions, all requests would fail.
+	if ctx.Role != RoleIndexer {
+		group.Use(Auth())
+	}
+
 	if server.settings.PushMetrics {
 		group.Use(mlhandlers.NewRelic())
 		group.Use(mlhandlers.Datadog())

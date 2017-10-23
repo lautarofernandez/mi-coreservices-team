@@ -10,13 +10,17 @@ import (
 	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
 )
 
-// Auth Middleware
-// Handles basic auth callerID, isAdmin request values retrieving
+// Auth Middleware. It checks that either the caller id or an admin scope is present
+// in the request. If neither is present, it fails with 400 Bad Request.
+// If prerequisites are met, then the found values are added to Gins context.
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rawCallerID := mlauth.GetCaller(c.Request)
 		isAdmin := mlauth.IsCallerAdmin(c.Request)
+
 		callerID, err := strconv.ParseUint(rawCallerID, 10, 64)
+
+		// If request is not from an admin, and we failed parsing caller ID, fail
 		if !isAdmin && err != nil {
 			errors.ReturnError(c, &errors.Error{
 				Code:    errors.BadRequestApiError,
@@ -29,6 +33,7 @@ func Auth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
 		c.Set("callerID", callerID)
 		c.Set("isAdmin", isAdmin)
 		c.Next()
