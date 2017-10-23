@@ -17,8 +17,7 @@ func Auth() gin.HandlerFunc {
 		rawCallerID := mlauth.GetCaller(c.Request)
 		isAdmin := mlauth.IsCallerAdmin(c.Request)
 		callerID, err := strconv.ParseUint(rawCallerID, 10, 64)
-
-		if err != nil {
+		if !isAdmin && err != nil {
 			errors.ReturnError(c, &errors.Error{
 				Code:    errors.BadRequestApiError,
 				Cause:   "parsing header value",
@@ -27,11 +26,9 @@ func Auth() gin.HandlerFunc {
 					"caller.id": rawCallerID,
 				},
 			})
-
 			c.Abort()
 			return
 		}
-
 		c.Set("callerID", callerID)
 		c.Set("isAdmin", isAdmin)
 		c.Next()
