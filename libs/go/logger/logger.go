@@ -37,9 +37,21 @@ func init() {
 func Log(item Logger) {
 
 	var logLine string
+	var data interface{}
 
 	for k, v := range item.Attributes {
+		// Special attribute used for raw data we want to log. It will be
+		// printed at the end of the line, without structured format.
+		if k == "DATA" {
+			data = v
+			continue
+		}
+
 		logLine += fmt.Sprintf("[%s:%+v]", k, v)
+	}
+
+	if data != nil {
+		logLine += fmt.Sprintf(" %s: %+v", "DATA", data)
 	}
 
 	fmt.Fprintln(item.Writer, logLine)
@@ -75,7 +87,6 @@ func (l *Logger) LogWithLevel(level string, event string, attrs ...Attrs) *Logge
 		Attributes: make(map[string]interface{}, 0),
 		Writer:     defaultLogWriter,
 	}
-
 	// user supplied attributes
 	for _, ts := range attrs {
 		for k, v := range ts {
