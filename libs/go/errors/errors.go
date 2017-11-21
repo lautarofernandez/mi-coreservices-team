@@ -7,6 +7,7 @@ import (
 	newrelic "github.com/newrelic/go-agent"
 	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
 	"net/http"
+	"github.com/mercadolibre/coreservices-team/libs/go/logger"
 )
 
 type ErrorCode struct {
@@ -112,6 +113,12 @@ func ReturnError(c *gin.Context, err *Error) {
 	c.JSON(err.Code.Status, err)
 
 	if err.Code.Alertable {
+
+		log := logger.LoggerWithName(c, "ReturnError")
+		log.Error("alertable_error", logger.Attrs{
+			"status_code": err.Code.Status, "desc_code": err.Code.Literal,
+			"Message": err.Message, "Values": err.Message})
+
 		transaction := nrgin.Transaction(c)
 		if transaction != nil {
 			transaction.AddAttribute(newrelic.AttributeResponseCode, err.Code.Status)
