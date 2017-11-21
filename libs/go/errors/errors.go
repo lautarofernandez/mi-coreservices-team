@@ -89,6 +89,11 @@ var (
 		Alertable: true,
 	}
 
+	TooManyRequestsApiError = ErrorCode{
+		Status:    http.StatusTooManyRequests,
+		Literal:   "TooManyRequestsApiError",
+		Alertable: true,
+	}
 )
 
 func ReturnError(c *gin.Context, err *Error) {
