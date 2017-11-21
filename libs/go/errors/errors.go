@@ -84,7 +84,7 @@ var (
 	}
 
 	UnsupportedIndexPageSizeApiError = ErrorCode{
-		Status:    http.StatusRequestEntityTooLarge,
+		Status:    http.StatusUnprocessableEntity,
 		Literal:   "UnsupportedIndexPageSizeApiError",
 		Alertable: true,
 	}
