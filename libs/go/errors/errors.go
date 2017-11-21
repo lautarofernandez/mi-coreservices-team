@@ -82,6 +82,13 @@ var (
 		Literal:   "BadGatewayApiError",
 		Alertable: true,
 	}
+
+	UnsupportedIndexPageSizeApiError = ErrorCode{
+		Status:    http.StatusUnprocessableEntity,
+		Literal:   "UnsupportedIndexPageSizeApiError",
+		Alertable: true,
+	}
+
 )
 
 func ReturnError(c *gin.Context, err *Error) {
