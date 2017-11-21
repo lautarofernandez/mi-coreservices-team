@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mercadolibre/coreservices-migrator/src/tasks"
+	"github.com/mercadolibre/coreservices-team/migrator/tasks"
 	"github.com/mercadolibre/go-meli-toolkit/gobigqueue"
 )
 

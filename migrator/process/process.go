@@ -3,20 +3,24 @@ package process
 import (
 	"fmt"
 
-	"github.com/mercadolibre/coreservices-migrator/src/files"
-	"github.com/mercadolibre/coreservices-migrator/src/tasks"
+	"github.com/mercadolibre/coreservices-team/migrator/process/internal/files"
+	"github.com/mercadolibre/coreservices-team/migrator/tasks"
 )
 
+type Process interface {
+	Run(fileName string) error
+}
+
 //Process is the interface for the Process
-type Process struct {
+type process struct {
 	task         tasks.Task
 	rowsToInform int
 	rateToStop   float32
 }
 
 //NewProcess returns a NewProcess instance
-func NewProcess(task tasks.Task, rowsToInform int, rateToStop float32) *Process {
-	return &Process{
+func NewProcess(task tasks.Task, rowsToInform int, rateToStop float32) Process {
+	return &process{
 		task:         task,
 		rowsToInform: rowsToInform,
 		rateToStop:   rateToStop,
@@ -24,7 +28,7 @@ func NewProcess(task tasks.Task, rowsToInform int, rateToStop float32) *Process 
 }
 
 //Run runs the migrations process
-func (process Process) Run(fileName string) error {
+func (p process) Run(fileName string) error {
 
 	defer files.CloseFiles()
 
@@ -67,7 +71,7 @@ func (process Process) Run(fileName string) error {
 			break
 		}
 		//do the work
-		err = process.task.Do(line)
+		err = p.task.Do(line)
 		count++
 		if err == nil {
 			countOk++
@@ -83,15 +87,15 @@ func (process Process) Run(fileName string) error {
 		}
 
 		//informs if it corresponds
-		if process.rowsToInform != 0 && count%process.rowsToInform == 0 {
+		if p.rowsToInform != 0 && count%p.rowsToInform == 0 {
 			files.Log("Processed %v rows", count)
 			countNok = 0
 			countOk = 0
 		}
 		//stops if it corresponds
-		if countOk+countNok > float32(process.rowsToInform)*0.1 && (countOk == 0 || countNok/countOk > process.rateToStop) {
-			files.Log("The error rate exceeded %v percent, the process will stops", process.rateToStop)
-			return fmt.Errorf("the error rate exceeded %v percent, the process stops", process.rateToStop)
+		if countOk+countNok > float32(p.rowsToInform)*0.1 && (countOk == 0 || countNok/countOk > p.rateToStop) {
+			files.Log("The error rate exceeded %v percent, the process will stops", p.rateToStop)
+			return fmt.Errorf("the error rate exceeded %v percent, the process stops", p.rateToStop)
 		}
 	}
 	return err

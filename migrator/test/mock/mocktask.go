@@ -2,7 +2,7 @@ package mock
 
 import (
 	"fmt"
-	"github.com/mercadolibre/coreservices-migrator/src/tasks"
+	"github.com/mercadolibre/coreservices-team/migrator/tasks"
 	"time"
 )
 
