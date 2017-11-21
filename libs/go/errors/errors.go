@@ -94,6 +94,12 @@ var (
 		Literal:   "TooManyRequestsApiError",
 		Alertable: true,
 	}
+	
+	ResourceConflictApiError = ErrorCode{
+		Status:    http.StatusConflict,
+		Literal:   "ResourceConflictApiError",
+		Alertable: true,
+	}
 )
 
 func ReturnError(c *gin.Context, err *Error) {
