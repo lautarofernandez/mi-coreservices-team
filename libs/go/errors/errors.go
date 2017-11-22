@@ -3,11 +3,12 @@ package errors
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
+	"github.com/mercadolibre/coreservices-team/libs/go/logger"
 	newrelic "github.com/newrelic/go-agent"
 	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
-	"net/http"
-	"github.com/mercadolibre/coreservices-team/libs/go/logger"
 )
 
 type ErrorCode struct {
@@ -95,7 +96,7 @@ var (
 		Literal:   "TooManyRequestsApiError",
 		Alertable: true,
 	}
-	
+
 	ResourceConflictApiError = ErrorCode{
 		Status:    http.StatusConflict,
 		Literal:   "ResourceConflictApiError",
@@ -104,7 +105,6 @@ var (
 )
 
 func ReturnError(c *gin.Context, err *Error) {
-
 	requestID, hasRequestID := c.Get("RequestId")
 	if hasRequestID {
 		c.Header("X-Request-Id", requestID.(string))
@@ -113,11 +113,18 @@ func ReturnError(c *gin.Context, err *Error) {
 	c.JSON(err.Code.Status, err)
 
 	if err.Code.Alertable {
-
 		log := logger.LoggerWithName(c, "ReturnError")
-		log.Error("alertable_error", logger.Attrs{
-			"status_code": err.Code.Status, "desc_code": err.Code.Literal,
-			"Message": err.Message, "Values": err.Values, "Cause": err.Cause})
+
+		attrs := logger.Attrs{
+			"status_code": err.Code.Status,
+			"desc_code":   err.Code.Literal,
+			"message":     err.Message,
+			"cause":       err.Cause,
+		}
+		for k, v := range err.Values {
+			attrs[k] = v
+		}
+		log.Error("alertable_error", attrs)
 
 		transaction := nrgin.Transaction(c)
 		if transaction != nil {
