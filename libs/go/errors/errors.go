@@ -117,7 +117,7 @@ func ReturnError(c *gin.Context, err *Error) {
 		log := logger.LoggerWithName(c, "ReturnError")
 		log.Error("alertable_error", logger.Attrs{
 			"status_code": err.Code.Status, "desc_code": err.Code.Literal,
-			"Message": err.Message, "Values": err.Message})
+			"Message": err.Message, "Values": err.Values, "Cause": err.Cause})
 
 		transaction := nrgin.Transaction(c)
 		if transaction != nil {
