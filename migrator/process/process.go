@@ -35,12 +35,14 @@ func (p process) Run(fileName string) error {
 	var count int
 	var countOk float32
 	var countNok float32
+	var countTotalNok float32
 
 	err := files.OpenLogFile()
 	if err != nil {
 		return fmt.Errorf("Error opening log file migrator-progress.txt")
 	}
-	files.Log(" The migration process runs with %v file", fileName)
+	files.Log("-----------------------------------------")
+	files.Log("The migration process begins with %v file", fileName)
 
 	//Load tracks files data
 	err = files.LoadTrackFilesData(fileName)
@@ -67,7 +69,7 @@ func (p process) Run(fileName string) error {
 		}
 		//ends of the file
 		if line == "" {
-			files.Log("The migration process ends %v file", fileName)
+			files.Log("The migration process ends %v file with %v lines processed and %v lines with error", fileName, count, countTotalNok)
 			break
 		}
 		//do the work
@@ -78,6 +80,7 @@ func (p process) Run(fileName string) error {
 			err = files.SetOk(line)
 		} else {
 			countNok++
+			countTotalNok++
 			err = files.SetNok(line)
 		}
 		//error in trak file

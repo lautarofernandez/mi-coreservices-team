@@ -3,6 +3,7 @@ package files
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -70,7 +71,7 @@ func GetNextlineToProcess() (string, error) {
 	var ok bool
 
 	line, err = readerInput.ReadString('\n')
-	if err != nil {
+	if err != io.EOF && err != nil {
 		return "", err
 	}
 	line = strings.TrimSpace(line)
@@ -100,7 +101,10 @@ func GetNextlineToProcess() (string, error) {
 func verifyPreviousExecution(line string) (bool, error) {
 	var ok bool
 	var err error
-	previousline, _ := readerTracker.ReadString('\n')
+	previousline, err := readerTracker.ReadString('\n')
+	if err != io.EOF && err != nil {
+		return false, err
+	}
 	if previousline == "" {
 		previousline, ok, err = getLineOfPreviousFile()
 		if err != nil {
@@ -134,7 +138,7 @@ func getLineOfPreviousFile() (string, bool, error) {
 		trackerFile.Close()
 		for actualFileNumber > 0 {
 			actualFileNumber--
-			Log("Actual lines %v, analice file %v with %v lines", actualLineNumber, trackFiles[actualFileNumber].name, trackFiles[actualFileNumber].nroLines)
+			Log("Actual lines %v, analyze file %v with %v lines", actualLineNumber, trackFiles[actualFileNumber].name, trackFiles[actualFileNumber].nroLines)
 			if trackFiles[actualFileNumber].nroLines > actualLineNumber {
 				openFile = true
 				trackerFile, err := os.Open(trackFiles[actualFileNumber].name)
@@ -146,7 +150,7 @@ func getLineOfPreviousFile() (string, bool, error) {
 				for i := 0; i <= actualLineNumber && err == nil; i++ {
 					line, err = readerTracker.ReadString('\n')
 				}
-				if err != nil {
+				if err != io.EOF && err != nil {
 					return "", false, err
 				}
 				ok = true
@@ -219,7 +223,7 @@ func LoadTrackFilesData(fileName string) error {
 		l := 0
 		for true {
 			line, err := readerTracker.ReadString('\n')
-			if err != nil {
+			if err != io.EOF && err != nil {
 				return err
 			}
 			if line == "" {
