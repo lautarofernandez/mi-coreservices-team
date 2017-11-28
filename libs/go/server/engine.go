@@ -111,6 +111,9 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 		group.Use(mlhandlers.MLAuth(auth))
 	}
 
+	// Add support for test header used by API rules to all endpoints
+	group.Use(MeliAPIRules())
+
 	fn := routes[ctx.Role]
 	fn(group)
 
