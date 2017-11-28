@@ -16,6 +16,12 @@ const (
 	StatusWarning = "WARN"
 
 	writeQueueChannelSize = 1000
+
+	// UnstructuredLogKeyPrefix is the prefix that the user can use to
+	// indicate that a given key should not be part of the structured
+	// log line. Given this prefix that key will be printed at the
+	// end of the line, and should not be indexed by Kibana.
+	UnstructuredLogKeyPrefix = "DATA"
 )
 
 var (
@@ -42,7 +48,7 @@ func Log(item Logger) {
 	for k, v := range item.Attributes {
 		// Special attribute used for raw data we want to log. It will be
 		// printed at the end of the line, without structured format.
-		if strings.HasPrefix(k, "DATA") {
+		if strings.HasPrefix(k, UnstructuredLogKeyPrefix) {
 			data[k] = v
 			continue
 		}
