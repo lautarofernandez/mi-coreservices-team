@@ -1,6 +1,7 @@
 package server
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -9,6 +10,26 @@ import (
 	"github.com/mercadolibre/go-meli-toolkit/mlauth"
 	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
 )
+
+const (
+	apiRulesTestHeader = "X-Gordik-Mode"
+	apiRulesTestValue  = "endpoint-test"
+)
+
+// MeliAPIRules middleware encapsulates all endpoints of Gordik and is used specifically
+// for returning 200 when a specific header is set. The idea is to use this header
+// whenever we want to test the existence of an endpoint and not its functionality.
+func MeliAPIRules() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		v := c.GetHeader(apiRulesTestHeader)
+		if v == apiRulesTestValue {
+			c.AbortWithStatus(http.StatusOK)
+			return
+		}
+
+		c.Next()
+	}
+}
 
 // Auth Middleware. It checks that either the caller id or an admin scope is present
 // in the request. If neither is present, it fails with 400 Bad Request.
