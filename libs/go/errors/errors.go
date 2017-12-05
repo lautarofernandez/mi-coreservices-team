@@ -102,6 +102,12 @@ var (
 		Literal:   "ResourceConflictApiError",
 		Alertable: true,
 	}
+	
+	UnprocessableEntityApiError = ErrorCode{
+		Status:    http.StatusUnprocessableEntity,
+		Literal:   "UnprocessableEntityApiError",
+		Alertable: false,
+	}
 )
 
 func ReturnError(c *gin.Context, err *Error) {
