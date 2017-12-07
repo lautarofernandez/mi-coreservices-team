@@ -100,7 +100,7 @@ var (
 	ResourceConflictApiError = ErrorCode{
 		Status:    http.StatusConflict,
 		Literal:   "ResourceConflictApiError",
-		Alertable: true,
+		Alertable: false,
 	}
 )
 
