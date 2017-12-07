@@ -19,7 +19,7 @@ func ContextFromScopeString(scope string) (ApplicationContext, error) {
 	env, role := Environment(parts[0]), Role(parts[1])
 
 	// Validate Role
-	if role != RoleIndexer && role != RoleRead && role != RoleSearch && role != RoleWrite {
+	if role != RoleIndexer && role != RoleRead && role != RoleSearch && role != RoleWrite && role != RoleWorker {
 		return ApplicationContext{}, fmt.Errorf("invalid role inferred from scope: %v", role)
 	}
 

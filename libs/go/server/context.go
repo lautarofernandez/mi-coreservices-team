@@ -24,7 +24,7 @@ type Role string
 
 const (
 	// RoleIndexer role will bootstrap the server in indexing mode.
-	// This mode should be used only by endpoints that receive data from BigQ.
+	// This mode should be used only by endpoints that receive data from BigQ and index a entity
 	RoleIndexer Role = "indexer"
 
 	// RoleRead role will bootstrap the server in read mode.
@@ -40,6 +40,10 @@ const (
 	// RoleWrite role will bootstrap the server in write mode.
 	// This mode enables the endpoints needed for writing things to a backing store.
 	RoleWrite = "write"
+
+	// RoleWorker role will bootstrap the server in worker mode.
+	// This mode should be used only by endpoints that receive data from BigQ and do a specific task
+	RoleWorker = "worker"
 )
 
 // ApplicationContext contains the necessary information for bootstraping the server
