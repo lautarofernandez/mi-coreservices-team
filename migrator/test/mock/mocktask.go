@@ -19,6 +19,6 @@ func NewMockTask() *MockTask {
 //Do is a mock of a task
 func (mockTask *MockTask) Do(data interface{}) error {
 	fmt.Printf("Tarea %v\n", data)
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	return nil
 }
