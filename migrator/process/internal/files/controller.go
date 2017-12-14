@@ -4,24 +4,24 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
-var inputFile *os.File
-var trackerFile *os.File
-var outputFile *os.File
-var logFile *os.File
-
-var readerInput *bufio.Reader
-var readerTracker *bufio.Reader
-var actualFileNumber int
-var actualLineNumber int
-
-var existsTrackFile bool
-var trackFiles []trackFile
+type File struct {
+	inputFile        *os.File
+	trackerFile      *os.File
+	outputFile       *os.File
+	logFile          *os.File
+	readerInput      *bufio.Reader
+	readerTracker    *bufio.Reader
+	actualFileNumber int
+	actualLineNumber int
+	existsTrackFile  bool
+	trackFiles       []trackFile
+}
 
 type trackFile struct {
 	name     string
@@ -29,68 +29,68 @@ type trackFile struct {
 }
 
 //OpenFiles open the files of read,log and compare line file
-func OpenFiles(fileName string) error {
+func (f *File) OpenFiles(fileName string) error {
 	var err error
 
 	// For read access.
-	inputFile, err = os.Open(fileName)
+	f.inputFile, err = os.Open(fileName)
 	if err != nil {
-		return fmt.Errorf("Error open file %v", fileName)
+		return fmt.Errorf("Error opening file %v: %v", fileName, err)
 	}
-	readerInput = bufio.NewReader(inputFile)
-	Log("Opening input file %s", fileName)
+	f.readerInput = bufio.NewReader(f.inputFile)
+	f.Log("Opening input file %s", fileName)
 
-	i := len(trackFiles)
+	i := len(f.trackFiles)
 	if i > 0 {
-		existsTrackFile = true
-		actualFileNumber = i - 1
+		f.existsTrackFile = true
+		f.actualFileNumber = i - 1
 		nro := strconv.Itoa(i - 1)
 		trackerfileName := fileName + "." + nro
-		trackerFile, err = os.Open(trackerfileName)
+		f.trackerFile, err = os.Open(trackerfileName)
 		if err != nil {
-			return fmt.Errorf("Error open file %v", trackerfileName)
+			return fmt.Errorf("Error opening file %v: %v", fileName, err)
 		}
-		readerTracker = bufio.NewReader(trackerFile)
-		Log("Opening track file %s", trackerfileName)
+		f.readerTracker = bufio.NewReader(f.trackerFile)
+		f.Log("Opening track file %s", trackerfileName)
 	}
 
 	nro := strconv.Itoa(i)
 	outputfileName := fileName + "." + nro
-	outputFile, err = os.OpenFile(outputfileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+	f.outputFile, err = os.OpenFile(outputfileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return fmt.Errorf("Error open file %v", outputfileName)
 	}
-	Log("Opening output file %s", outputfileName)
+	f.Log("Opening output file %s", outputfileName)
 	return nil
 }
 
 //GetNextlineToProcess returns the next line no processed
-func GetNextlineToProcess() (string, error) {
+func (f *File) GetNextlineToProcess() (string, error) {
 	var line string
 	var err error
 	var ok bool
 
-	line, err = readerInput.ReadString('\n')
+	line, err = f.readerInput.ReadString('\n')
 	if err != io.EOF && err != nil {
 		return "", err
 	}
 	line = strings.TrimSpace(line)
-	if !existsTrackFile {
-		actualLineNumber++
+	if !f.existsTrackFile {
+		f.actualLineNumber++
 	} else {
 		//search the next line without processing
 		for true {
-			ok, err = verifyPreviousExecution(line)
+			ok, err = f.verifyPreviousExecution(line)
 			if err != nil {
 				return "", err
 			}
 			if ok {
-				SetOk(line)
+				f.SetOk(line)
 			} else {
 				break
 			}
-			actualLineNumber++
-			line, err = readerInput.ReadString('\n')
+			f.actualLineNumber++
+			line, err = f.readerInput.ReadString('\n')
 			line = strings.TrimSpace(line)
 		}
 	}
@@ -98,15 +98,15 @@ func GetNextlineToProcess() (string, error) {
 }
 
 //verifyPreviousExecution verified if current line was processed
-func verifyPreviousExecution(line string) (bool, error) {
+func (f *File) verifyPreviousExecution(line string) (bool, error) {
 	var ok bool
 	var err error
-	previousline, err := readerTracker.ReadString('\n')
+	previousline, err := f.readerTracker.ReadString('\n')
 	if err != io.EOF && err != nil {
 		return false, err
 	}
 	if previousline == "" {
-		previousline, ok, err = getLineOfPreviousFile()
+		previousline, ok, err = f.getLineOfPreviousFile()
 		if err != nil {
 			return false, err
 		}
@@ -128,27 +128,27 @@ func verifyPreviousExecution(line string) (bool, error) {
 	return false, nil
 }
 
-func getLineOfPreviousFile() (string, bool, error) {
+func (f *File) getLineOfPreviousFile() (string, bool, error) {
 	var openFile = false
 	var line string
 	var err error
 	var ok bool
 
-	if actualFileNumber > 0 {
-		trackerFile.Close()
-		for actualFileNumber > 0 {
-			actualFileNumber--
-			Log("Actual lines %v, analyze file %v with %v lines", actualLineNumber, trackFiles[actualFileNumber].name, trackFiles[actualFileNumber].nroLines)
-			if trackFiles[actualFileNumber].nroLines > actualLineNumber {
+	if f.actualFileNumber > 0 {
+		f.trackerFile.Close()
+		for f.actualFileNumber > 0 {
+			f.actualFileNumber--
+			f.Log("Actual lines %v, analyze file %v with %v lines", f.actualLineNumber, f.trackFiles[f.actualFileNumber].name, f.trackFiles[f.actualFileNumber].nroLines)
+			if f.trackFiles[f.actualFileNumber].nroLines > f.actualLineNumber {
 				openFile = true
-				trackerFile, err := os.Open(trackFiles[actualFileNumber].name)
+				f.trackerFile, err = os.Open(f.trackFiles[f.actualFileNumber].name)
 				if err != nil {
-					fmt.Printf("Error open file %v", trackFiles[actualFileNumber].name)
+					fmt.Printf("Error open file %v", f.trackFiles[f.actualFileNumber].name)
 					return "", false, err
 				}
-				readerTracker = bufio.NewReader(trackerFile)
-				for i := 0; i <= actualLineNumber && err == nil; i++ {
-					line, err = readerTracker.ReadString('\n')
+				f.readerTracker = bufio.NewReader(f.trackerFile)
+				for i := 0; i <= f.actualLineNumber && err == nil; i++ {
+					line, err = f.readerTracker.ReadString('\n')
 				}
 				if err != io.EOF && err != nil {
 					return "", false, err
@@ -157,72 +157,63 @@ func getLineOfPreviousFile() (string, bool, error) {
 				break
 			}
 		}
-		if actualFileNumber == 0 && openFile == false {
-			existsTrackFile = false
+		if f.actualFileNumber == 0 && openFile == false {
+			f.existsTrackFile = false
 			return "", false, nil
 		}
 	} else {
-		existsTrackFile = false
+		f.existsTrackFile = false
 		return "", false, nil
 	}
 	return line, ok, err
 }
 
 //SetOk set in log file that current line was processed ok
-func SetOk(line string) error {
-	_, err := outputFile.WriteString(line + ",OK\n")
+func (f *File) SetOk(line string) error {
+	_, err := f.outputFile.WriteString(line + ",OK\n")
 	return err
 }
 
 //SetNok set in log file that current line was processed wrong
-func SetNok(line string) error {
-	_, err := outputFile.WriteString(line + ",ER\n")
-	return err
-}
-
-//OpenLogFile open a log process file
-func OpenLogFile() (err error) {
-	logFile, err = os.OpenFile("migrator-progress.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		return fmt.Errorf("Error open log file")
-	}
+func (f *File) SetNok(line string) error {
+	_, err := f.outputFile.WriteString(line + ",ER\n")
 	return err
 }
 
 //Log to logfile
-func Log(line string, parameters ...interface{}) error {
+func (f *File) Log(line string, parameters ...interface{}) error {
 	logline := fmt.Sprintf(line, parameters...)
-	logDate := fmt.Sprintf("%v - %s\n", time.Now().Format(time.RFC3339), logline)
-	_, err := logFile.WriteString(logDate)
-	logFile.Sync()
-	return err
+
+	log.Println(logline)
+
+	return nil
 }
 
 //CloseFiles closeFiles
-func CloseFiles() {
-	inputFile.Close()
-	trackerFile.Close()
-	outputFile.Close()
+func (f *File) CloseFiles() {
+	f.inputFile.Close()
+	f.trackerFile.Close()
+	f.outputFile.Close()
 }
 
 //LoadTrackFilesData iterate in logs files and load data about theses
-func LoadTrackFilesData(fileName string) error {
+func (f *File) LoadTrackFilesData(fileName string) error {
 	var i = 0
 	var err error
 	origFilename := fileName
 	nro := strconv.Itoa(i)
 	fileName = origFilename + "." + nro
-	trackFiles = make([]trackFile, 0)
+	f.trackFiles = make([]trackFile, 0)
 
 	for true {
-		trackerFile, err = os.Open(fileName)
+		f.trackerFile, err = os.Open(fileName)
 		if err != nil {
 			break
 		}
-		readerTracker = bufio.NewReader(trackerFile)
+		f.readerTracker = bufio.NewReader(f.trackerFile)
 		l := 0
 		for true {
-			line, err := readerTracker.ReadString('\n')
+			line, err := f.readerTracker.ReadString('\n')
 			if err != io.EOF && err != nil {
 				return err
 			}
@@ -231,13 +222,13 @@ func LoadTrackFilesData(fileName string) error {
 			}
 			l++
 		}
-		trackerFile.Close()
+		f.trackerFile.Close()
 		tmpLogFile := trackFile{
 			name:     fileName,
 			nroLines: l,
 		}
-		trackFiles = append(trackFiles, tmpLogFile)
-		Log("Append %s trackfile with %d lines", fileName, l)
+		f.trackFiles = append(f.trackFiles, tmpLogFile)
+		f.Log("Append %s trackfile with %d lines", fileName, l)
 		i++
 		nro = strconv.Itoa(i)
 		fileName = origFilename + "." + nro

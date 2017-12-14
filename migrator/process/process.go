@@ -29,31 +29,27 @@ func NewProcess(task tasks.Task, rowsToInform int, rateToStop float32) Process {
 
 //Run runs the migrations process
 func (p process) Run(fileName string) error {
+	f := files.File{}
 
-	defer files.CloseFiles()
+	defer f.CloseFiles()
 
 	var count int
 	var countOk float32
 	var countNok float32
 	var countTotalNok float32
 
-	err := files.OpenLogFile()
-	if err != nil {
-		return fmt.Errorf("Error opening log file migrator-progress.txt")
-	}
-	files.Log("-----------------------------------------")
-	files.Log("The migration process begins with %v file", fileName)
+	f.Log("%v: starting migrator process", fileName)
 
 	//Load tracks files data
-	err = files.LoadTrackFilesData(fileName)
+	err := f.LoadTrackFilesData(fileName)
 	if err != nil {
-		files.Log("Error in LoadTrackFilesData - %v", err)
+		f.Log("Error in LoadTrackFilesData - %v", err)
 		return err
 	}
 	//Opens the input and trackfile
-	err = files.OpenFiles(fileName)
+	err = f.OpenFiles(fileName)
 	if err != nil {
-		files.Log("Error in OpenFiles - %v", err)
+		f.Log("Error in OpenFiles - %v", err)
 		return err
 	}
 
@@ -62,14 +58,14 @@ func (p process) Run(fileName string) error {
 		//Get the next line without processing
 		//it's possible that the first lines have
 		// been executed in previous executions
-		line, err := files.GetNextlineToProcess()
+		line, err := f.GetNextlineToProcess()
 		if err != nil {
-			files.Log("Error in GetNextlineToProcess - %v", err)
+			f.Log("Error in GetNextlineToProcess - %v", err)
 			return fmt.Errorf("Error reading lines %v", err)
 		}
 		//ends of the file
 		if line == "" {
-			files.Log("The migration process ends %v file with %v lines processed and %v lines with error", fileName, count, countTotalNok)
+			f.Log("The migration process ends %v file with %v lines processed and %v lines with error", fileName, count, countTotalNok)
 			break
 		}
 		//do the work
@@ -77,28 +73,28 @@ func (p process) Run(fileName string) error {
 		count++
 		if err == nil {
 			countOk++
-			err = files.SetOk(line)
+			err = f.SetOk(line)
 		} else {
 			countNok++
 			countTotalNok++
-			err = files.SetNok(line)
+			err = f.SetNok(line)
 		}
 		//error in trak file
 		if err != nil {
-			files.Log("Error writing track file - %v", err)
+			f.Log("Error writing track file - %v", err)
 			return fmt.Errorf("Error writing track file - %v", err)
 		}
 
 		//informs if it corresponds
 		if p.rowsToInform != 0 && count%p.rowsToInform == 0 {
-			files.Log("Processed %v rows", count)
+			f.Log("%v: processed %v rows", fileName, count)
 			countNok = 0
 			countOk = 0
 		}
 		//stops if it corresponds
 		if countOk+countNok > float32(p.rowsToInform)*0.1 && (countOk == 0 || countNok/countOk > p.rateToStop) {
-			files.Log("The error rate exceeded %v percent, the process will stops", p.rateToStop)
-			return fmt.Errorf("the error rate exceeded %v percent, the process stops", p.rateToStop)
+			f.Log("%v: The error rate exceeded %v percent, the process will stops", fileName, p.rateToStop)
+			return fmt.Errorf("%v: the error rate exceeded %v percent, the process stops", fileName, p.rateToStop)
 		}
 	}
 	return err
