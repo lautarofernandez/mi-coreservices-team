@@ -46,7 +46,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 		errors.ReturnError(c, &errors.Error{
 			Cause:   err.Error(),
 			Code:    errors.InternalServerApiError,
-			Message: "Error retrieving id",
+			Message: fmt.Sprintf("Error retrieving id %v", id),
 		})
 		return
 	}
@@ -62,7 +62,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 		errors.ReturnError(c, &errors.Error{
 			Cause:   err.Error(),
 			Code:    errors.InternalServerApiError,
-			Message: "error in lock",
+			Message: fmt.Sprintf("error in lock id %v", id),
 		})
 		return
 	}
@@ -82,7 +82,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 		errors.ReturnError(c, &errors.Error{
 			Cause:   err.Error(),
 			Code:    errors.InternalServerApiError,
-			Message: "Error retriving id in kvs",
+			Message: fmt.Sprintf("Error retriving id %v in kvs", id),
 		})
 		return
 	}
@@ -98,7 +98,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
-				Message: "Error in Process Export",
+				Message: fmt.Sprintf("Error in Process Export id %v", id),
 			})
 			return
 		}
@@ -113,7 +113,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
-				Message: "Error saving in kvs",
+				Message: fmt.Sprintf("Error saving in kvs id", id),
 			})
 			return
 		}
@@ -132,7 +132,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
-				Message: "Error sending the notification",
+				Message: fmt.Sprintf("Error sending the notification id %v", id),
 			})
 			return
 		}
@@ -149,7 +149,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
-				Message: "Error saving in kvs",
+				Message: fmt.Sprintf("Error saving in kvs id %v", id),
 			})
 			return
 		}
