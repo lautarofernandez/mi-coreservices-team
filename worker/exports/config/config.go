@@ -4,5 +4,6 @@ import ()
 
 // Segments
 const (
-	OrchestratorSeg = "Orchestrator"
+	OrchestratorSeg    = "Orchestrator"
+	GodogExecuteMetric = "application.worker.export.execute"
 )

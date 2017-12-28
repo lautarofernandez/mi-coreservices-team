@@ -10,6 +10,7 @@ import (
 	"github.com/mercadolibre/coreservices-team/worker/exports/dependencies"
 	"github.com/mercadolibre/coreservices-team/worker/exports/models"
 	"github.com/mercadolibre/coreservices-team/worker/exports/utils"
+	"github.com/mercadolibre/go-meli-toolkit/godog"
 	"github.com/mercadolibre/go-meli-toolkit/gokvsclient"
 )
 
@@ -41,6 +42,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 	//retrieve the id
 	id, err := orchestrator.idFinder.GetID(c)
 	if err != nil {
+		godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, new(godog.Tags).Add("results", "error_get_id").ToArray()...)
 		errors.ReturnError(c, &errors.Error{
 			Cause:   err.Error(),
 			Code:    errors.InternalServerApiError,
@@ -48,9 +50,15 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 		})
 		return
 	}
+	log.Info(
+		"Begin export and lock id",
+		logger.Attrs{
+			"id": id,
+		})
 	//retrieve a Lock
 	lock, err := orchestrator.lockClient.Lock(id)
 	if err != nil {
+		godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, new(godog.Tags).Add("results", "error_lock").ToArray()...)
 		errors.ReturnError(c, &errors.Error{
 			Cause:   err.Error(),
 			Code:    errors.InternalServerApiError,
@@ -62,7 +70,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 	//always at the end, release the lock
 	defer orchestrator.lockClient.Unlock(lock)
 	log.Info(
-		"get_kvs_item",
+		"Get kvs",
 		logger.Attrs{
 			"id": id,
 		})
@@ -70,6 +78,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 	//retireve the kvsItem
 	exportItem, err := orchestrator.getKvsItem(id)
 	if err != nil {
+		godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, new(godog.Tags).Add("results", "error_get_kvs").ToArray()...)
 		errors.ReturnError(c, &errors.Error{
 			Cause:   err.Error(),
 			Code:    errors.InternalServerApiError,
@@ -79,6 +88,11 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 	}
 	//Verified the status
 	if exportItem.ExportStatus == models.ExportPending {
+		log.Info(
+			"Call to export",
+			logger.Attrs{
+				"id": id,
+			})
 		exportItem, err := orchestrator.process.Process(c, exportItem, lock)
 		if err != nil {
 			errors.ReturnError(c, &errors.Error{
@@ -88,8 +102,14 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			})
 			return
 		}
+		log.Info(
+			"Save kvs status",
+			logger.Attrs{
+				"id": id,
+			})
 		err = orchestrator.saveKvsItem(exportItem)
 		if err != nil {
+			godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, new(godog.Tags).Add("results", "error_save_kvs").ToArray()...)
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
@@ -97,11 +117,18 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			})
 			return
 		}
+		godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, new(godog.Tags).Add("results", "ok").ToArray()...)
 	}
 	if exportItem.ExportStatus == models.ExportDone && !exportItem.SendNotification && exportItem.NotifyCompletion.BqTopicName != "" {
+		log.Info(
+			"Send Notification",
+			logger.Attrs{
+				"id": id,
+			})
 		//Send Notification
 		err := orchestrator.sender.SendNotification(exportItem.NotifyCompletion.BqTopicName, exportItem.ID, exportItem.ResourceName)
 		if err != nil {
+			godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, new(godog.Tags).Add("results", "error_notigication").ToArray()...)
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
@@ -110,9 +137,15 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			return
 		}
 		//Save send notification in kvs
+		log.Info(
+			"Save send Notification",
+			logger.Attrs{
+				"id": id,
+			})
 		exportItem.SendNotification = true
 		err = orchestrator.saveKvsItem(exportItem)
 		if err != nil {
+			godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, new(godog.Tags).Add("results", "error_save_kvs").ToArray()...)
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
