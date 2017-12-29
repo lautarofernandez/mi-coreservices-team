@@ -33,7 +33,7 @@ func (lockClient *LockClient) Lock(resource string) (interface{}, error) {
 func (client *LockClient) KeepAlive(lockInterface interface{}) (interface{}, error) {
 	lock, ok := lockInterface.(*golockclient.Lock)
 	if !ok {
-		return nil, fmt.Errorf("Error, can't cast interfaz to loc")
+		return nil, fmt.Errorf("error, can't cast interfaz to loc")
 	}
 	return client.golockclient.KeepAlive(*lock)
 }
@@ -42,7 +42,7 @@ func (client *LockClient) KeepAlive(lockInterface interface{}) (interface{}, err
 func (client *LockClient) Unlock(lockInterface interface{}) error {
 	lock, ok := lockInterface.(*golockclient.Lock)
 	if !ok {
-		return fmt.Errorf("Error, can't cast interfaz to loc")
+		return fmt.Errorf("error, can't cast interfaz to loc")
 	}
 
 	return client.golockclient.Unlock(*lock)

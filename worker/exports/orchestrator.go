@@ -46,7 +46,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 		errors.ReturnError(c, &errors.Error{
 			Cause:   err.Error(),
 			Code:    errors.InternalServerApiError,
-			Message: fmt.Sprintf("Error retrieving id %v", id),
+			Message: fmt.Sprintf("error retrieving id %v", id),
 		})
 		return
 	}
@@ -82,7 +82,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 		errors.ReturnError(c, &errors.Error{
 			Cause:   err.Error(),
 			Code:    errors.InternalServerApiError,
-			Message: fmt.Sprintf("Error retriving id %v in kvs", id),
+			Message: fmt.Sprintf("error getting value from item: %v error: %v", id, err),
 		})
 		return
 	}
@@ -98,7 +98,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
-				Message: fmt.Sprintf("Error in Process Export id %v", id),
+				Message: fmt.Sprintf("error in process Export id %v", id),
 			})
 			return
 		}
@@ -113,7 +113,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
-				Message: fmt.Sprintf("Error saving in kvs id", id),
+				Message: fmt.Sprintf("error saving in kvs id", id),
 			})
 			return
 		}
@@ -132,7 +132,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
-				Message: fmt.Sprintf("Error sending the notification id %v", id),
+				Message: fmt.Sprintf("error sending the notification id %v", id),
 			})
 			return
 		}
@@ -149,7 +149,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
-				Message: fmt.Sprintf("Error saving in kvs id %v", id),
+				Message: fmt.Sprintf("error saving in kvs id %v", id),
 			})
 			return
 		}

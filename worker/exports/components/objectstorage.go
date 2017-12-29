@@ -9,25 +9,25 @@ import (
 
 //ObjectStorage is a Objecto Storage wrapper
 type ObjectStorage struct {
-	storageClient rest.RequestBuilder
+	writeClient rest.RequestBuilder
 }
 
 //NewObjectStorage returns a Objecto Storage wrapper
-func NewObjectStorage(storageClient rest.RequestBuilder) *ObjectStorage {
+func NewObjectStorage(writeClient rest.RequestBuilder) *ObjectStorage {
 	return &ObjectStorage{
-		storageClient: storageClient,
+		writeClient: writeClient,
 	}
 }
 
 //PutFile put a file in fury Objecto Storage
 func (obj *ObjectStorage) PutFile(path string, data []byte) error {
 
-	response := obj.storageClient.Put(path, data)
+	response := obj.writeClient.Put(path, data)
 	if response.Err != nil {
-		return fmt.Errorf("Error saving in object storage")
+		return fmt.Errorf("error saving in object storage")
 	}
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("Bad status returned while perfoming PUT into storage: %d", response.StatusCode)
+		return fmt.Errorf("bad status returned while perfoming PUT into storage: %d", response.StatusCode)
 	}
 	return nil
 }
