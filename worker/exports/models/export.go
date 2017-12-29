@@ -33,9 +33,9 @@ type ExportFileFormat string
 
 var (
 	//JSONFormat specified json format to export activities
-	JSONFormat = "application/json"
+	JSONFormat = ExportFileFormat("application/json")
 	//CSVFormat when the export is pending
-	CSVFormat = "application/csv"
+	CSVFormat = ExportFileFormat("application/csv")
 )
 
 //ExportNotifyCompletion defines struct of the export request
