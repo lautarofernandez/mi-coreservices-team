@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -10,8 +11,8 @@ import (
 )
 
 const (
-	bigqCluster = "test"
-	bigqTopic   = "mpcs-movements-test.mpcs-movements"
+	bigqCluster = "default"
+	bigqTopic   = "mango-mpcs-movements-v1-migration"
 )
 
 type MovementMigrator struct {
@@ -33,11 +34,13 @@ func NewMovementMigrator(rpm int64) *MovementMigrator {
 func (m *MovementMigrator) Do(data interface{}) error {
 	line, ok := data.(string)
 	if !ok {
+		log.Printf("Error casting data to string: %v", data)
 		return fmt.Errorf("Error casting data to string: %v", data)
 	}
 
 	id, err := strconv.ParseUint(line, 10, 64)
 	if err != nil {
+		log.Printf("Error casting data to uint: %v", err)
 		return fmt.Errorf("Error parsing string into uint: %v", line)
 	}
 
@@ -45,5 +48,9 @@ func (m *MovementMigrator) Do(data interface{}) error {
 		Msg: map[string]interface{}{"id": id},
 	}
 
-	return m.Publisher.Send(payload)
+	err = m.Publisher.Send(payload)
+	if err != nil {
+		log.Printf("error sending id to bigqueue: %v", err)
+	}
+	return err
 }

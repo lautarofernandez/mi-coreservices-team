@@ -3,10 +3,11 @@ package task
 import (
 	"fmt"
 
-	"github.com/mercadolibre/coreservices-team/migrator/tasks"
-	"github.com/mercadolibre/go-meli-toolkit/gobigqueue"
 	"os"
 	"strconv"
+
+	"github.com/mercadolibre/coreservices-team/migrator/tasks"
+	"github.com/mercadolibre/go-meli-toolkit/gobigqueue"
 )
 
 var publisher gobigqueue.Publisher
@@ -18,11 +19,7 @@ type MigraMovementsTask struct {
 
 func init() {
 	os.Setenv("GO_ENVIRONMENT", "production")
-	publisher = gobigqueue.NewPublisher(
-		"test",
-		[]string{
-			"mpcs-movements-test.mpcs-movements",
-		})
+	publisher = gobigqueue.NewPublisher("default", []string{"mango-mpcs-movements-v1-migration"})
 }
 
 //NewMigraTask returns a tasks for migrate activities
@@ -38,12 +35,12 @@ func (migraTask *MigraMovementsTask) Do(data interface{}) error {
 	if !ok {
 		return fmt.Errorf("Error in cast data to string")
 	}
-	id, err:= strconv.ParseUint(line, 10, 64)
-	if (err != nil) {
+	id, err := strconv.ParseUint(line, 10, 64)
+	if err != nil {
 		return fmt.Errorf("Error parsing id: " + line)
 	}
 	msg := map[string]interface{}{
-		"id":            id,
+		"id": id,
 	}
 	fmt.Println("Movement ID: " + line)
 	return publisher.Send(&gobigqueue.Payload{msg, nil, nil})
