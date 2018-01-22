@@ -2,6 +2,8 @@ package exports
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mercadolibre/coreservices-team/libs/go/errors"
@@ -18,17 +20,18 @@ import (
 type Orchestrator struct {
 	idFinder   dependencies.IDFinderer
 	process    dependencies.ProcessExport
-	lockClient dependencies.LockClient
 	kvsClient  dependencies.KvsClient
 	sender     dependencies.SenderNotification
+	lockClient dependencies.LockClient
+	lockTTL    time.Duration
 }
 
 //NewOrchestrator returns a new orchestrator
-func NewOrchestrator(idFinder dependencies.IDFinderer, process dependencies.ProcessExport, kvsClient dependencies.KvsClient, lockClient dependencies.LockClient, sender dependencies.SenderNotification) *Orchestrator {
-
+func NewOrchestrator(idFinder dependencies.IDFinderer, process dependencies.ProcessExport, kvsClient dependencies.KvsClient, lockClient dependencies.LockClient, lockTTL time.Duration, sender dependencies.SenderNotification) *Orchestrator {
 	return &Orchestrator{
 		idFinder:   idFinder,
 		lockClient: lockClient,
+		lockTTL:    lockTTL,
 		kvsClient:  kvsClient,
 		sender:     sender,
 		process:    process,
@@ -56,8 +59,18 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			"id": id,
 		})
 	//retrieve a Lock
-	lock, err := orchestrator.lockClient.Lock(id)
+	lock, err := orchestrator.lockClient.Lock(id, int(orchestrator.lockTTL.Seconds()))
 	if err != nil {
+		//if the lock is taken, no error 500 returned
+		if strings.HasPrefix(err.Error(), config.ErrLockTakenStr) {
+			errors.ReturnError(c, &errors.Error{
+				Cause:   err.Error(),
+				Code:    errors.UnprocessableEntityApiError,
+				Message: fmt.Sprintf("export id %v is running", id),
+			})
+			return
+		}
+
 		godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, new(godog.Tags).Add("results", "error_lock").ToArray()...)
 		errors.ReturnError(c, &errors.Error{
 			Cause:   err.Error(),
@@ -75,7 +88,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			"id": id,
 		})
 
-	//retireve the kvsItem
+	// retrieve the kvsItem
 	exportItem, err := orchestrator.getKvsItem(id)
 	if err != nil {
 		godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, new(godog.Tags).Add("results", "error_get_kvs").ToArray()...)
@@ -113,7 +126,7 @@ func (orchestrator *Orchestrator) Export(c *gin.Context) {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.InternalServerApiError,
-				Message: fmt.Sprintf("error saving in kvs id", id),
+				Message: fmt.Sprintf("error saving id %s to kvs", id),
 			})
 			return
 		}

@@ -5,6 +5,7 @@ import (
 	"github.com/mercadolibre/coreservices-team/worker/exports/models"
 	"github.com/mercadolibre/go-meli-toolkit/godsclient"
 	"github.com/mercadolibre/go-meli-toolkit/gokvsclient"
+	"github.com/mercadolibre/go-meli-toolkit/golockclient"
 )
 
 // DsClient is used so that we can accept the minimum required functionality
@@ -17,9 +18,9 @@ type DsClient interface {
 
 //LockClient is used to accept the minimum required lock functionality
 type LockClient interface {
-	Lock(resource string) (interface{}, error)
-	KeepAlive(lock interface{}) (interface{}, error)
-	Unlock(lock interface{}) error
+	Lock(resource string, ttl int) (golockclient.Lock, error)
+	KeepAlive(lock golockclient.Lock) (golockclient.Lock, error)
+	Unlock(lock golockclient.Lock) error
 }
 
 //IDFinderer is the interface used with diferents idfinders
@@ -46,5 +47,5 @@ type SenderNotification interface {
 
 //ProcessExport is the interface used with diferents export process
 type ProcessExport interface {
-	Process(c *gin.Context, exportItem *models.ExportItem, lock interface{}) (*models.ExportItem, error)
+	Process(c *gin.Context, exportItem *models.ExportItem, lock golockclient.Lock) (*models.ExportItem, error)
 }
