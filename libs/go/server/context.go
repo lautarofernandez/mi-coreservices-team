@@ -8,6 +8,9 @@ const (
 	// EnvProduction is the environment used in production environments
 	EnvProduction Environment = "production"
 
+	// EnvSandbox is the environment used in sandbox environments
+	EnvSandbox Environment = "sandbox"
+
 	// EnvDevelop is the environment used in development or staging environments
 	EnvDevelop = "develop"
 
