@@ -15,6 +15,11 @@ func TestContextFromScopeString(t *testing.T) {
 		ExpectedErr   bool
 	}{
 		{"production-indexer", server.RoleIndexer, server.EnvProduction, "", false},
+		{"sandbox-indexer", server.RoleIndexer, server.EnvSandbox, "", false},
+		{"develop-indexer", server.RoleIndexer, server.EnvDevelop, "", false},
+		{"integration-indexer", server.RoleIndexer, server.EnvIntegration, "", false},
+		{"test-indexer", server.RoleIndexer, server.EnvTest, "", false},
+
 		{"production-indexer-tag", server.RoleIndexer, server.EnvProduction, "tag", false},
 		{"production-indexer-feature-new-search", server.RoleIndexer, server.EnvProduction, "feature-new-search", false},
 		{"invalid-indexer", server.RoleIndexer, server.EnvProduction, "appname", true},

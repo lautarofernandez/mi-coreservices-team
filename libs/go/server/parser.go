@@ -23,8 +23,8 @@ func ContextFromScopeString(scope string) (ApplicationContext, error) {
 		return ApplicationContext{}, fmt.Errorf("invalid role inferred from scope: %v", role)
 	}
 
-	// Validate Scope
-	if env != EnvProduction && env != EnvDevelop && env != EnvIntegration && env != EnvTest {
+	// Validate Environment
+	if env != EnvProduction && env != EnvSandbox && env != EnvDevelop && env != EnvIntegration && env != EnvTest {
 		return ApplicationContext{}, fmt.Errorf("invalid environment inferred from scope %v", role)
 	}
 
