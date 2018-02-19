@@ -108,6 +108,12 @@ var (
 		Literal:   "UnprocessableEntityApiError",
 		Alertable: false,
 	}
+	
+	ServiceUnavailableApiError = ErrorCode{ 
+		Status:    http.StatusServiceUnavailable, 
+		Literal:   "ServiceUnavailableApiError", 
+		Alertable: true, 
+	}
 )
 
 func ReturnError(c *gin.Context, err *Error) {
