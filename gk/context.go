@@ -27,6 +27,7 @@ type Measurable interface {
 type Caller struct {
 	ID      uint64
 	IsAdmin bool
+	Scopes  []string
 }
 
 // Context contains all the resources we use during a given request
@@ -61,6 +62,7 @@ func Handler(f HandlerFunc) gin.HandlerFunc {
 			Caller: Caller{
 				ID:      callerID,
 				IsAdmin: mlauth.IsCallerAdmin(c.Request),
+				Scopes:  mlauth.GetCallerScopes(c.Request),
 			},
 			ClientID:  clientID,
 			RequestID: reqID,
