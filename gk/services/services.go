@@ -72,7 +72,14 @@ func (s *Services) KVS(name string, config kvs.KvsClientConfig) (kvs.Client, err
 		return kvs.MakeKvsClient(svcName, config), nil
 	}
 
-	// TODO: If not, we'll have to manually initialize it using the read and write endpoints
+	// If there's no service name, then we'll try to initialize the KVS using the read and write endpoints
+	if mapContains(svc.SvcParams, "endpoint_read", "endpoint_write", "container_name") {
+		config.SetContainerName(svc.SvcParams["container_name"])
+		config.SetReadEndpoint(svc.SvcParams["endpoint_read"])
+		config.SetWriteEndpoint(svc.SvcParams["endpoint_write"])
+
+		return kvs.MakeKvsClient(svc.SvcParams["container_name"], config), nil
+	}
 
 	return nil, fmt.Errorf("missing params for initializing KVS container")
 }
