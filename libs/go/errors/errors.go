@@ -102,17 +102,23 @@ var (
 		Literal:   "ResourceConflictApiError",
 		Alertable: false,
 	}
-	
+
 	UnprocessableEntityApiError = ErrorCode{
 		Status:    http.StatusUnprocessableEntity,
 		Literal:   "UnprocessableEntityApiError",
 		Alertable: false,
 	}
-	
-	ServiceUnavailableApiError = ErrorCode{ 
-		Status:    http.StatusServiceUnavailable, 
-		Literal:   "ServiceUnavailableApiError", 
-		Alertable: true, 
+
+	ServiceUnavailableApiError = ErrorCode{
+		Status:    http.StatusServiceUnavailable,
+		Literal:   "ServiceUnavailableApiError",
+		Alertable: true,
+	}
+
+	ForbiddenApiError = ErrorCode{
+		Status:    http.StatusForbidden,
+		Literal:   "ForbiddenApiError",
+		Alertable: false,
 	}
 )
 
