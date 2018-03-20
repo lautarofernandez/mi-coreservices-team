@@ -100,6 +100,10 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 	// scenario there's not authentication present (no caller ID nor scopes).
 	// If this middleware is run under this conditions, all requests would fail.
 	if ctx.Role != RoleIndexer && ctx.Role != RoleWorker {
+		if auth := server.settings.AuthScopes; len(auth) > 0 {
+			group.Use(mlhandlers.MLAuth(auth))
+		}
+
 		group.Use(Auth())
 	}
 
@@ -107,10 +111,6 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 		group.Use(mlhandlers.NewRelic())
 		group.Use(mlhandlers.Datadog())
 		group.Use(RenameNewRelicTransaction())
-	}
-
-	if auth := server.settings.AuthScopes; len(auth) > 0 {
-		group.Use(mlhandlers.MLAuth(auth))
 	}
 
 	// Add support for test header used by API rules to all endpoints
