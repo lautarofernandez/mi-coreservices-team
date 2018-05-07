@@ -6,6 +6,7 @@ import (
 	"github.com/mercadolibre/go-meli-toolkit/godsclient"
 	"github.com/mercadolibre/go-meli-toolkit/gokvsclient"
 	"github.com/mercadolibre/go-meli-toolkit/golockclient"
+	"github.com/mercadolibre/go-meli-toolkit/goosclient"
 )
 
 // DsClient is used so that we can accept the minimum required functionality
@@ -35,14 +36,14 @@ type KvsClient interface {
 	Get(key string) (gokvsclient.Item, error)
 }
 
-//Storager is used to accept the minimum required to object storage functionality
-type Storager interface {
-	PutFile(path string, data []byte) error
+// StorageClient is used to accept the minimum required to object storage functionality
+type StorageClient interface {
+	Multipart(goosclient.MultipartInput) error
 }
 
 //SenderNotification is the interface used with diferents sender
 type SenderNotification interface {
-	SendNotification(topicName string, id string, resourceName string) error
+	SendNotification(exportItem *models.ExportItem) error
 }
 
 //ProcessExport is the interface used with diferents export process
