@@ -24,6 +24,24 @@ func NoRouteHandler() gin.HandlerFunc {
 	}
 }
 
+// BlockPublicTraffic returns 404 to the route when the request has the
+// X-Public header set to true.
+func BlockPublicTraffic() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Header.Get("x-public") == "true" {
+			c.JSON(http.StatusNotFound, map[string]interface{}{
+				"status":  http.StatusNotFound,
+				"message": "Not Found",
+			})
+
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
 // HealthCheckHandler is a default handler that's used by Fury for checking if a
 // given application instance is accepting requests.
 func HealthCheckHandler(c *gin.Context) {
