@@ -3,10 +3,9 @@ package server
 import (
 	"fmt"
 
-	"github.com/mercadolibre/coreservices-team/gk/jsonschema"
-
 	"github.com/atarantini/ginrequestid"
 	"github.com/gin-gonic/gin"
+	"github.com/mercadolibre/coreservices-team/gk/jsonschema"
 	"github.com/mercadolibre/go-meli-toolkit/gingonic/mlhandlers"
 )
 

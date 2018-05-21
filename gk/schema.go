@@ -31,7 +31,7 @@ func JSONSchema(schemaName string) gin.HandlerFunc {
 			values := map[string]string{}
 
 			if verr, ok := err.(*jsonschema.ValidationError); ok {
-				values = ErrorValues(verr)
+				values = verr.ErrorsDescription()
 			}
 
 			errors.ReturnError(c, &errors.Error{
@@ -50,22 +50,4 @@ func JSONSchema(schemaName string) gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-// ErrorValues returns the bottom down level of error returned by the JSON Schema validator
-func ErrorValues(err *jsonschema.ValidationError) map[string]string {
-	if len(err.Causes) == 0 {
-		return map[string]string{
-			err.SchemaPtr: err.Message,
-		}
-	}
-
-	values := map[string]string{}
-	for _, cause := range err.Causes {
-		for k, v := range ErrorValues(cause) {
-			values[k] = v
-		}
-	}
-
-	return values
 }
