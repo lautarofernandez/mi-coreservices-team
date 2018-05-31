@@ -9,8 +9,8 @@ import (
 	"github.com/mercadolibre/go-meli-toolkit/gingonic/mlhandlers"
 )
 
-// MercadoPagoCoreServicesGroupPreffix is the preffix added to every exposed url
-const MercadoPagoCoreServicesGroupPreffix = "/mpcs"
+// GroupPreffix is the preffix added to every exposed url
+var GroupPreffix = "/mpcs"
 
 // settings contains the relevant information that our server may use for initiating.
 type settings struct {
@@ -90,7 +90,7 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 
 	// Call the current Role group function with the current group as param
 	// so that it loads the active urls.
-	group := server.Group(MercadoPagoCoreServicesGroupPreffix)
+	group := server.Group(GroupPreffix)
 
 	group.Use(ginrequestid.RequestId())
 
