@@ -22,10 +22,10 @@ type settings struct {
 
 // Map with default server settings for each possible scope.
 var envSettings = map[Environment]settings{
-	EnvDevelop:     {LogLevel: "DEBUG", PushMetrics: true, Debug: true, AuthScopes: []string{}},
-	EnvTest:        {LogLevel: "INFO", PushMetrics: true, Debug: true, AuthScopes: []string{}},
-	EnvIntegration: {LogLevel: "INFO", PushMetrics: false, Debug: true, AuthScopes: []string{}},
-	EnvProduction:  {LogLevel: "INFO", PushMetrics: true, Debug: false, AuthScopes: []string{}},
+	EnvDevelop:     {LogLevel: "DEBUG", PushMetrics: true, Debug: true, AuthScopes: nil},
+	EnvTest:        {LogLevel: "INFO", PushMetrics: true, Debug: true, AuthScopes: nil},
+	EnvIntegration: {LogLevel: "INFO", PushMetrics: false, Debug: true, AuthScopes: nil},
+	EnvProduction:  {LogLevel: "INFO", PushMetrics: true, Debug: false, AuthScopes: nil},
 }
 
 // RoutingGroup is a map of urls and functions for a given role.
@@ -99,7 +99,7 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 	// scenario there's not authentication present (no caller ID nor scopes).
 	// If this middleware is run under this conditions, all requests would fail.
 	if ctx.Role != RoleIndexer && ctx.Role != RoleWorker {
-		if auth := server.settings.AuthScopes; len(auth) > 0 {
+		if auth := server.settings.AuthScopes; auth != nil {
 			group.Use(mlhandlers.MLAuth(auth))
 		}
 
