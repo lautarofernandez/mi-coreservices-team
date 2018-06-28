@@ -122,10 +122,10 @@ func (c *Context) DatastoreSegment(db newrelic.DatastoreProduct, collection stri
 // context is only populated with a functioning logger and a valid request id.
 // If more information is required, then the user should add it in its end.
 func CreateTestContext() *Context {
-	reqID := uuid.NewV4().String()
+	reqID, _ := uuid.NewV4()
 
 	return &Context{
-		RequestID: reqID,
+		RequestID: reqID.String(),
 		Log: &logger.Logger{
 			Attributes: logger.Attrs{"request_id": reqID},
 		},
