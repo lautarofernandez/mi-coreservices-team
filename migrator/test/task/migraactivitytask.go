@@ -1,7 +1,9 @@
-package task
+package tasks
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/mercadolibre/coreservices-team/migrator/tasks"
@@ -16,11 +18,17 @@ type MigraTask struct {
 }
 
 func init() {
-	//os.Setenv("GO_ENVIRONMENT", "production")
+	topicName := os.Getenv("TOPIC_NAME")
+	cluster := os.Getenv("CLUSTER_NAME")
+
+	if cluster == "" {
+		cluster = "default"
+	}
+
 	publisher = gobigqueue.NewPublisher(
-		"default",
+		cluster,
 		[]string{
-			"test_migracion_activities.mpcs_activities",
+			topicName,
 		})
 }
 
@@ -32,6 +40,7 @@ func NewMigraTask() *MigraTask {
 //Do is the especific task that migrate the activities
 //sending a msg to bigQ
 func (migraTask *MigraTask) Do(data interface{}) error {
+	var msg map[string]interface{}
 
 	line, ok := data.(string)
 	if !ok {
@@ -39,13 +48,32 @@ func (migraTask *MigraTask) Do(data interface{}) error {
 	}
 	fields := strings.Split(line, ",")
 	if len(fields) != 4 {
-		return fmt.Errorf("Error in split line, detects %d fields in the line", len(fields))
+		return fmt.Errorf("Error in split line, detects %d fields and got 4", len(fields))
 	}
-	msg := map[string]interface{}{
-		"user_id":       fields[0],
-		"resource_type": fields[1],
-		"activity_type": fields[2],
-		"id":            fields[3],
+
+	userId, err := strconv.ParseUint(fields[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	//Para las activities de mango, se hace un tratamiento especial
+	if fields[1] == "payment_v1_gateway" && fields[2] == "payment_v1" {
+		msg = map[string]interface{}{
+			"user_id": userId,
+			"resource": map[string]interface{}{
+				"type": fields[2],
+			},
+			"type": "gateway",
+			"id":   fields[3],
+		}
+	} else {
+		msg = map[string]interface{}{
+			"user_id": userId,
+			"resource": map[string]interface{}{
+				"type": fields[1],
+			},
+			"type": fields[2],
+			"id":   fields[3],
+		}
 	}
 	return publisher.Send(&gobigqueue.Payload{msg, nil, nil})
 }

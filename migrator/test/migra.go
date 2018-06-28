@@ -5,19 +5,13 @@ import (
 	"os"
 
 	"github.com/mercadolibre/coreservices-team/migrator/process"
-	"github.com/mercadolibre/coreservices-team/migrator/test/mock"
+	"github.com/mercadolibre/coreservices-team/migrator/test/tasks"
 )
 
 func main() {
 
-	fmt.Printf("args %v\n", os.Args)
-
-	proc := process.NewProcess(mock.NewMockTask(), 100, 0.1)
-
-	os.Chdir("..")
-
-	err := proc.Run("migra.csv")
-
+	proc := process.NewProcess(tasks.NewMigraTask(), 100, 0.1)
+	err := proc.Run(os.Args[1])
 	if err != nil {
 		fmt.Printf("The process ends with error: %v", err)
 		os.Exit(1)
