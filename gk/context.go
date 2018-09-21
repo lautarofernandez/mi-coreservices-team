@@ -17,9 +17,15 @@ import (
 // Measurable is the interface of the exposed methods used for measuring
 // code execution time and reporting errors.
 type Measurable interface {
-	StartSegment(name string) newrelic.Segment
-	StartExternalSegment(url string) newrelic.ExternalSegment
+	StartSegment(name string) Segment
+	StartExternalSegment(url string) Segment
 	NoticeError(err error)
+}
+
+// Segment interfaces exposes available methods for all
+// StartXXX functions resulting segments.
+type Segment interface {
+	End() error
 }
 
 // Caller is the type that contains the information inside a request that
@@ -87,13 +93,13 @@ func Handler(f HandlerFunc) gin.HandlerFunc {
 
 // StartSegment makes it easy to instrument segments.
 // After starting a segment do `defer segment.End()`
-func (c *Context) StartSegment(name string) newrelic.Segment {
+func (c *Context) StartSegment(name string) Segment {
 	return newrelic.StartSegment(c.nrTransaction, name)
 }
 
 // StartExternalSegment makes it easy to instrument segments that call external services.
-func (c *Context) StartExternalSegment(url string) newrelic.ExternalSegment {
-	return newrelic.ExternalSegment{
+func (c *Context) StartExternalSegment(url string) Segment {
+	return &newrelic.ExternalSegment{
 		URL:       url,
 		StartTime: newrelic.StartSegmentNow(c.nrTransaction),
 	}
@@ -109,8 +115,8 @@ func (c *Context) NoticeError(err error) {
 }
 
 // DatastoreSegment records a segment pertaining an operation with a datastore
-func (c *Context) DatastoreSegment(db newrelic.DatastoreProduct, collection string, operation DBOperation) newrelic.DatastoreSegment {
-	return newrelic.DatastoreSegment{
+func (c *Context) DatastoreSegment(db newrelic.DatastoreProduct, collection string, operation DBOperation) Segment {
+	return &newrelic.DatastoreSegment{
 		StartTime:  newrelic.StartSegmentNow(c.nrTransaction),
 		Product:    db,
 		Collection: collection,

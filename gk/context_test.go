@@ -16,7 +16,8 @@ import (
 )
 
 func TestHandler(t *testing.T) {
-	reqID := uuid.NewV4().String()
+	uuid, _ := uuid.NewV4()
+	reqID := uuid.String()
 
 	rr := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rr)
