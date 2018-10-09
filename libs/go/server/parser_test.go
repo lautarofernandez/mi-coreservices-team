@@ -22,8 +22,12 @@ func TestContextFromScopeString(t *testing.T) {
 
 		{"production-indexer-tag", server.RoleIndexer, server.EnvProduction, "tag", false},
 		{"production-indexer-feature-new-search", server.RoleIndexer, server.EnvProduction, "feature-new-search", false},
-		{"invalid-indexer", server.RoleIndexer, server.EnvProduction, "appname", true},
-		{"test-invalid", server.RoleIndexer, server.EnvTest, "", true},
+
+		{"custom-indexer", server.RoleIndexer, server.Environment("custom"), "", false},
+		{"custom-indexer-appname", server.RoleIndexer, server.Environment("custom"), "appname", false},
+		{"test-custom", server.Role("custom"), server.EnvTest, "", false},
+		{"test-custom-appname", server.Role("custom"), server.EnvTest, "appname", false},
+
 		{"invalid", server.RoleIndexer, server.EnvTest, "", true},
 	}
 
