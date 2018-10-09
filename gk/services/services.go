@@ -14,6 +14,7 @@ import (
 	bq "github.com/mercadolibre/go-meli-toolkit/gobigqueue"
 	ds "github.com/mercadolibre/go-meli-toolkit/godsclient"
 	kvs "github.com/mercadolibre/go-meli-toolkit/gokvsclient"
+	lock "github.com/mercadolibre/go-meli-toolkit/golockclient"
 	cache "github.com/mercadolibre/go-meli-toolkit/gomemcached"
 	os "github.com/mercadolibre/go-meli-toolkit/goosclient"
 )
@@ -83,6 +84,36 @@ func (s *Services) KVS(name string, config kvs.KvsClientConfig) (kvs.Client, err
 	}
 
 	return nil, fmt.Errorf("missing params for initializing KVS container")
+}
+
+// Lock returns and initializes a lock client with the correct configuration for
+// the given environment, or error if something goes wrong.
+func (s *Services) Lock(name string, config lock.LockClientConfig) (lock.Client, error) {
+	svc, err := s.service(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if !svc.HasRole(s.ctx.Role) {
+		return nil, nil
+	}
+
+	if svc.Type != TypeLock {
+		return nil, fmt.Errorf("service %s is of type %s, not KVS", name, svc.Type)
+	}
+
+	// If config is not given then use default config values.
+	if config == nil {
+		config = lock.MakeLockClientConfig()
+	}
+
+	// If a service name is given as part of the KVS config, then use that to
+	// initialize the KVS client.
+	if svcName, ok := svc.SvcParams["service"]; ok {
+		return lock.MakeLockClient(svcName, config), nil
+	}
+
+	return nil, fmt.Errorf("missing params for initializing lock namespace")
 }
 
 // DS returns and initializes a DS client with the correct configuration for
