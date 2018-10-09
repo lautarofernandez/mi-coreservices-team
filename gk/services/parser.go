@@ -65,7 +65,7 @@ func (s service) HasRole(role server.Role) bool {
 	return false
 }
 
-func parseYAML(environment server.Environment) (services map[string]service, err error) {
+func parseYAML(filename string, environment server.Environment) (services map[string]service, err error) {
 	services = map[string]service{}
 
 	// Add default panic handler. Given that we cast a lot of interface{}
@@ -81,7 +81,7 @@ func parseYAML(environment server.Environment) (services map[string]service, err
 		}
 	}()
 
-	b, err := ioutil.ReadFile("config.yml")
+	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error reading contents of config.yml: %v", err)
 	}

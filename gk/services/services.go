@@ -25,14 +25,19 @@ type Services struct {
 	services map[string]service
 }
 
-// New parses a configuration file and returns a Services struct.
-func New(ctx server.ApplicationContext) (*Services, error) {
-	s, err := parseYAML(ctx.Environment)
+// NewWithFile parses the given configuration file and returns a Services struct.
+func NewWithFile(file string, ctx server.ApplicationContext) (*Services, error) {
+	s, err := parseYAML(file, ctx.Environment)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Services{ctx, s}, nil
+}
+
+// New parses a configuration file and returns a Services struct.
+func New(ctx server.ApplicationContext) (*Services, error) {
+	return NewWithFile("config.yml", ctx)
 }
 
 func (s *Services) service(name string) (service, error) {
