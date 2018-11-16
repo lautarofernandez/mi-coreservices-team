@@ -165,7 +165,7 @@ func (trx *Transaction) End() {
 }
 
 type Segment struct {
-	nrSeg newrelic.Segment
+	nrSeg *newrelic.Segment
 }
 
 func NullSegment() *Segment {
