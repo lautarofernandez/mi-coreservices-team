@@ -7,13 +7,14 @@ import (
 )
 
 //StartSegment start a segment for new relic
-func StartSegment(c *gin.Context, name string) newrelic.Segment {
+func StartSegment(c *gin.Context, name string) *newrelic.Segment {
 	return newrelic.StartSegment(nrgin.Transaction(c), name)
 }
 
 //StartExternalSegment start a external segment for new relic
-func StartExternalSegment(c *gin.Context, url string) newrelic.ExternalSegment {
-	nrSearchSegment := newrelic.ExternalSegment{URL: url}
-	nrSearchSegment.StartTime = newrelic.StartSegmentNow(nrgin.Transaction(c))
-	return nrSearchSegment
+func StartExternalSegment(c *gin.Context, url string) *newrelic.ExternalSegment {
+	return &newrelic.ExternalSegment{
+		URL:       url,
+		StartTime: newrelic.StartSegmentNow(nrgin.Transaction(c)),
+	}
 }
