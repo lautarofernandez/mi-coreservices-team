@@ -1,7 +1,10 @@
 package process
 
 import (
+	"context"
 	"fmt"
+
+	"golang.org/x/time/rate"
 
 	"github.com/mercadolibre/coreservices-team/migrator/process/internal/files"
 	"github.com/mercadolibre/coreservices-team/migrator/tasks"
@@ -16,6 +19,7 @@ type process struct {
 	task         tasks.Task
 	rowsToInform int
 	rateToStop   float32
+	limiter      *rate.Limiter
 }
 
 //NewProcess returns a NewProcess instance
@@ -27,8 +31,17 @@ func NewProcess(task tasks.Task, rowsToInform int, rateToStop float32) Process {
 	}
 }
 
+func NewProcessWithLimit(task tasks.Task, rowsToInform int, rateToStop float32, limiter *rate.Limiter) Process {
+	return &process{
+		task:         task,
+		rowsToInform: rowsToInform,
+		rateToStop:   rateToStop,
+		limiter:      limiter,
+	}
+}
+
 //Run runs the migrations process
-func (p process) Run(fileName string) error {
+func (p *process) Run(fileName string) error {
 	f := files.File{}
 
 	defer f.CloseFiles()
@@ -68,7 +81,15 @@ func (p process) Run(fileName string) error {
 			f.Log("The migration process ends %v file with %v lines processed and %v lines with error", fileName, count, countTotalNok)
 			break
 		}
+
 		//do the work
+		if p.limiter != nil {
+			if err := p.limiter.Wait(context.Background()); err != nil {
+				f.Log("Error in Rate limiter Wait - %v", err)
+				return fmt.Errorf("error waiting for rate limit token: %v", err)
+			}
+		}
+
 		err = p.task.Do(line)
 		count++
 		if err == nil {

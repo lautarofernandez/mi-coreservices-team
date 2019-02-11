@@ -12,6 +12,7 @@ import (
 
 	"github.com/mercadolibre/coreservices-team/migrator/process"
 	"github.com/mercadolibre/coreservices-team/migrator/test/task"
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -55,7 +56,7 @@ func main() {
 		log.Fatalf("Error reading files from dir: %v", err)
 	}
 
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 
 	// Parse pending files and send them to a channel
 	pending := make(chan string, 5000)
@@ -81,9 +82,12 @@ func main() {
 
 	// Throughput is not used in migrator
 	throughputPerWorker := int64(Throughput) / int64(workers)
-	t := task.NewMovementMigrator(throughputPerWorker)
+	t := task.NewPaymentMigrator(throughputPerWorker)
 
 	os.Chdir(directory)
+
+	limiter := rate.NewLimiter(rate.Limit(25000/60.0), 1) // Rate limit is per second, we think of it as per minute
+	_ = limiter
 
 	// Start the corresponding number of workers
 	log.Printf("Spawning workers...")
@@ -92,7 +96,10 @@ func main() {
 			for file := range pending {
 				log.Printf(`[START] Worker for file "%s" started.`, path.Base(file))
 
-				proc := process.NewProcess(t, 10000, 0.1)
+				// TODO: Choose whether you want it with or without rate limit.
+				proc := process.NewProcessWithLimit(t, 10000, 0.1, limiter)
+				// proc := process.NewProcess(t, 10000, 0.1)
+
 				if err := proc.Run(file); err != nil {
 					log.Printf("migration for file %v ended with error: %v", path.Base(file), err)
 				}
