@@ -94,6 +94,12 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 
 	group.Use(ginrequestid.RequestId())
 
+	if server.settings.PushMetrics {
+		group.Use(mlhandlers.NewRelic())
+		group.Use(mlhandlers.Datadog())
+		group.Use(RenameNewRelicTransaction())
+	}
+
 	// Add authentication middleware, but only if not on indexer role.
 	// When on indexer role, requests are being called by BigQ, and in this
 	// scenario there's not authentication present (no caller ID nor scopes).
@@ -104,12 +110,6 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 		}
 
 		group.Use(Auth())
-	}
-
-	if server.settings.PushMetrics {
-		group.Use(mlhandlers.NewRelic())
-		group.Use(mlhandlers.Datadog())
-		group.Use(RenameNewRelicTransaction())
 	}
 
 	// Add support for test header used by API rules to all endpoints
