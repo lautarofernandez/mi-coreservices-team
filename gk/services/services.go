@@ -3,7 +3,6 @@ package services
 import (
 	"database/sql"
 	"fmt"
-	"github.com/mercadolibre/go-meli-toolkit/restful/rest"
 	"net/url"
 	"time"
 
