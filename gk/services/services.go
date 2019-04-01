@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/mercadolibre/go-meli-toolkit/restful/rest"
-	"github.com/rodrigodmd/go-meli-toolkit/goosclient"
 	"net/url"
 	"time"
 
@@ -147,21 +146,14 @@ func (s *Services) OS(name string, configRead, configWrite os.OsClientConfig) (o
 
 	if configRead == nil {
 		configRead = os.MakeOSClientConfigRead()
-		configRead.SetMaxIdleConnections(50)
-		configRead.SetTimeout(3000 * time.Millisecond)
-		configRead.SetContentType(rest.JSON)
-
 	}
 
 	if configWrite == nil {
 		configWrite = os.MakeOSClientConfigRead()
-		configWrite.SetMaxIdleConnections(50)
-		configWrite.SetTimeout(3000 * time.Millisecond)
-		configWrite.SetContentType(rest.BYTES)
 	}
 
-	if mapContains(svc.SvcParams, "topic") {
-		return os.MakeOsClient(svc.SvcParams["topic"], configRead, configWrite), nil
+	if mapContains(svc.SvcParams, "service") {
+		return os.MakeOsClient(svc.SvcParams["service"], configRead, configWrite), nil
 	}
 
 	return nil, fmt.Errorf("missing params for initializing object storage container")
