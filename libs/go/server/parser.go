@@ -9,7 +9,7 @@ import (
 // Scope format must be: {environment}-{app role}[-{app name}]
 // For example: test-search, develop-indexer, production-indexer-feature-new-context
 func ContextFromScopeString(scope string) (ApplicationContext, error) {
-	parts := strings.Split(strings.ToLower(scope), "-")
+	parts := strings.SplitN(strings.ToLower(scope), "-", 3)
 
 	// If we receive a scope with only 1 part, then we lack information for bootstraping the server.
 	if len(parts) <= 1 {
@@ -18,21 +18,11 @@ func ContextFromScopeString(scope string) (ApplicationContext, error) {
 
 	env, role := Environment(parts[0]), Role(parts[1])
 
-	// Validate Role
-	if role != RoleIndexer && role != RoleRead && role != RoleSearch && role != RoleWrite && role != RoleWorker {
-		return ApplicationContext{}, fmt.Errorf("invalid role inferred from scope: %v", role)
-	}
-
-	// Validate Environment
-	if env != EnvProduction && env != EnvSandbox && env != EnvDevelop && env != EnvIntegration && env != EnvTest {
-		return ApplicationContext{}, fmt.Errorf("invalid environment inferred from scope %v", role)
-	}
-
 	// If fury scope has a 3rd part, then we use that as some kind of tag for the application
 	// Eg.:  We might use this tag for running a specific branch from the git repository.
 	var tag string
-	if len(parts) >= 3 {
-		tag = strings.Join(parts[2:], "-")
+	if len(parts) == 3 {
+		tag = parts[2]
 	}
 
 	return ApplicationContext{

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	// The mysql driver needs to be initialized implicitly so that it
@@ -14,6 +15,7 @@ import (
 	bq "github.com/mercadolibre/go-meli-toolkit/gobigqueue"
 	ds "github.com/mercadolibre/go-meli-toolkit/godsclient"
 	kvs "github.com/mercadolibre/go-meli-toolkit/gokvsclient"
+	lock "github.com/mercadolibre/go-meli-toolkit/golockclient"
 	cache "github.com/mercadolibre/go-meli-toolkit/gomemcached"
 	os "github.com/mercadolibre/go-meli-toolkit/goosclient"
 )
@@ -24,14 +26,19 @@ type Services struct {
 	services map[string]service
 }
 
-// New parses a configuration file and returns a Services struct.
-func New(ctx server.ApplicationContext) (*Services, error) {
-	s, err := parseYAML(ctx.Environment)
+// NewWithFile parses the given configuration file and returns a Services struct.
+func NewWithFile(file string, ctx server.ApplicationContext) (*Services, error) {
+	s, err := parseYAML(file, ctx.Environment)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Services{ctx, s}, nil
+}
+
+// New parses a configuration file and returns a Services struct.
+func New(ctx server.ApplicationContext) (*Services, error) {
+	return NewWithFile("config.yml", ctx)
 }
 
 func (s *Services) service(name string) (service, error) {
@@ -83,6 +90,36 @@ func (s *Services) KVS(name string, config kvs.KvsClientConfig) (kvs.Client, err
 	}
 
 	return nil, fmt.Errorf("missing params for initializing KVS container")
+}
+
+// Lock returns and initializes a lock client with the correct configuration for
+// the given environment, or error if something goes wrong.
+func (s *Services) Lock(name string, config lock.LockClientConfig) (lock.Client, error) {
+	svc, err := s.service(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if !svc.HasRole(s.ctx.Role) {
+		return nil, nil
+	}
+
+	if svc.Type != TypeLock {
+		return nil, fmt.Errorf("service %s is of type %s, not KVS", name, svc.Type)
+	}
+
+	// If config is not given then use default config values.
+	if config == nil {
+		config = lock.MakeLockClientConfig()
+	}
+
+	// If a service name is given as part of the KVS config, then use that to
+	// initialize the KVS client.
+	if svcName, ok := svc.SvcParams["service"]; ok {
+		return lock.MakeLockClient(svcName, config), nil
+	}
+
+	return nil, fmt.Errorf("missing params for initializing lock namespace")
 }
 
 // DS returns and initializes a DS client with the correct configuration for
@@ -182,7 +219,7 @@ func (s *Services) Publisher(name string) (bq.Publisher, error) {
 
 }
 
-// Cache returns and initializes a DS client with the correct configuration for
+// Cache returns and initializes a memcached client with the correct configuration for
 // the given environment, or error if something goes wrong.
 func (s *Services) Cache(name string) (cache.Client, error) {
 	svc, err := s.service(name)
@@ -198,13 +235,18 @@ func (s *Services) Cache(name string) (cache.Client, error) {
 		return nil, fmt.Errorf("service %s is of type %s, not Cache", name, svc.Type)
 	}
 
-	if mapContains(svc.SvcParams, "endpoint") {
-		cache.RegisterCluster(name, svc.SvcParams["endpoint"])
-
-		return cache.NewClient(name)
+	if !mapContains(svc.SvcParams, "endpoints") {
+		return nil, fmt.Errorf("missing params for initializing Cache service")
 	}
 
-	return nil, fmt.Errorf("missing params for initializing Cache service")
+	servers := strings.Split(svc.SvcParams["endpoints"], " ")
+	if len(servers) < 1 {
+		return nil, fmt.Errorf("no servers found for cache service")
+	}
+
+	cache.RegisterCluster(name, servers...)
+
+	return cache.NewClient(name)
 }
 
 // DB returns and initializes a SQL DB client with the correct configuration for
