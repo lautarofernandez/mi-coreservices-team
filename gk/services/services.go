@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	// The mysql driver needs to be initialized implicitly so that it
@@ -218,7 +219,7 @@ func (s *Services) Publisher(name string) (bq.Publisher, error) {
 
 }
 
-// Cache returns and initializes a DS client with the correct configuration for
+// Cache returns and initializes a memcached client with the correct configuration for
 // the given environment, or error if something goes wrong.
 func (s *Services) Cache(name string) (cache.Client, error) {
 	svc, err := s.service(name)
@@ -234,13 +235,18 @@ func (s *Services) Cache(name string) (cache.Client, error) {
 		return nil, fmt.Errorf("service %s is of type %s, not Cache", name, svc.Type)
 	}
 
-	if mapContains(svc.SvcParams, "endpoint") {
-		cache.RegisterCluster(name, svc.SvcParams["endpoint"])
-
-		return cache.NewClient(name)
+	if !mapContains(svc.SvcParams, "endpoints") {
+		return nil, fmt.Errorf("missing params for initializing Cache service")
 	}
 
-	return nil, fmt.Errorf("missing params for initializing Cache service")
+	servers := strings.Split(svc.SvcParams["endpoints"], " ")
+	if len(servers) < 1 {
+		return nil, fmt.Errorf("no servers found for cache service")
+	}
+
+	cache.RegisterCluster(name, servers...)
+
+	return cache.NewClient(name)
 }
 
 // DB returns and initializes a SQL DB client with the correct configuration for
