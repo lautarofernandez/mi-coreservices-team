@@ -15,6 +15,7 @@ import (
 	ds "github.com/mercadolibre/go-meli-toolkit/godsclient"
 	kvs "github.com/mercadolibre/go-meli-toolkit/gokvsclient"
 	cache "github.com/mercadolibre/go-meli-toolkit/gomemcached"
+	os "github.com/mercadolibre/go-meli-toolkit/goosclient"
 )
 
 // Services ...
@@ -124,6 +125,37 @@ func (s *Services) DS(name string, config *ds.DsClientConfig) (ds.Client, error)
 	}
 
 	return nil, fmt.Errorf("missing params for initializing DS container")
+}
+
+// OS returns and initializes a Object Storage client with the correct configuration for
+// the given environment, or error if something goes wrong.
+func (s *Services) OS(name string, configRead, configWrite os.OsClientConfig) (os.Client, error) {
+	svc, err := s.service(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if !svc.HasRole(s.ctx.Role) {
+		return nil, nil
+	}
+
+	if svc.Type != TypeObjectStorage {
+		return nil, fmt.Errorf("service %s is of type %s, not Object Storage", name, svc.Type)
+	}
+
+	if configRead == nil {
+		configRead = os.MakeOSClientConfigRead()
+	}
+
+	if configWrite == nil {
+		configWrite = os.MakeOSClientConfigRead()
+	}
+
+	if mapContains(svc.SvcParams, "service") {
+		return os.MakeOsClient(svc.SvcParams["service"], configRead, configWrite), nil
+	}
+
+	return nil, fmt.Errorf("missing params for initializing object storage container")
 }
 
 // Publisher returns and initializes a BigQ publisher with the correct configuration
