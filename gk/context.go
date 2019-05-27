@@ -31,9 +31,10 @@ type Segment interface {
 // Caller is the type that contains the information inside a request that
 // represents the user that generated it.
 type Caller struct {
-	ID      uint64
-	IsAdmin bool
-	Scopes  []string
+	ID       uint64
+	IsAdmin  bool
+	IsPublic bool
+	Scopes   []string
 }
 
 // Context contains all the resources we use during a given request
@@ -66,9 +67,10 @@ func Handler(f HandlerFunc) gin.HandlerFunc {
 
 		context := &Context{
 			Caller: Caller{
-				ID:      callerID,
-				IsAdmin: mlauth.IsCallerAdmin(c.Request),
-				Scopes:  mlauth.GetCallerScopes(c.Request),
+				ID:       callerID,
+				IsAdmin:  mlauth.IsCallerAdmin(c.Request),
+				IsPublic: mlauth.IsPublic(c.Request),
+				Scopes:   mlauth.GetCallerScopes(c.Request),
 			},
 			ClientID:  clientID,
 			RequestID: reqID,
