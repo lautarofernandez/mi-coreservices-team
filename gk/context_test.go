@@ -28,11 +28,13 @@ func TestHandler(t *testing.T) {
 	c.Request.Header.Set("X-Request-Id", reqID)
 	c.Request.Header.Set("X-Caller-Id", "120120120")
 	c.Request.Header.Set("X-Caller-Scopes", "admin")
+	c.Request.Header.Set("X-Public", "true")
 
 	gk.Handler(func(c *gin.Context, ctx *gk.Context) {
 		assert.EqualValues(t, reqID, ctx.RequestID)
 		assert.EqualValues(t, 120120120, ctx.Caller.ID)
 		assert.EqualValues(t, true, ctx.Caller.IsAdmin)
+		assert.EqualValues(t, true, ctx.Caller.IsPublic)
 
 		assert.NotNil(t, ctx.Log)
 		assert.IsType(t, &logger.Logger{}, ctx.Log)
