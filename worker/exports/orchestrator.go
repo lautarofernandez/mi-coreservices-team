@@ -15,6 +15,7 @@ import (
 	"github.com/mercadolibre/coreservices-team/worker/exports/utils"
 	"github.com/mercadolibre/go-meli-toolkit/godog"
 	"github.com/mercadolibre/go-meli-toolkit/gokvsclient"
+	"github.com/mercadolibre/go-meli-toolkit/golockclient"
 )
 
 const (
@@ -69,7 +70,7 @@ func (o *Orchestrator) Export(c *gin.Context) {
 	// return 422 Unprocessable Entity as the request was correct but we chose not to process.
 	lock, err := o.lockClient.Lock(exportID, int(o.lockTTL.Seconds()))
 	if err != nil {
-		if strings.HasPrefix(err.Error(), config.ErrLockTakenStr) {
+		if err == golockclient.ErrLocked {
 			errors.ReturnError(c, &errors.Error{
 				Cause:   err.Error(),
 				Code:    errors.UnprocessableEntityApiError,
