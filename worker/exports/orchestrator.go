@@ -126,30 +126,29 @@ func (o *Orchestrator) Export(c *gin.Context) {
 	// If export status is pending, and we where able to lock the export ID, then this export is fine
 	// to start processing. We'll do just that, and delegate the export process to the exporter.
 	if exportItem.ExportStatus == models.ExportPending {
-		log.Debug("start_export_process", logger.Attrs{"export_id": exportID})
+		go func() {
+			log.Debug("start_export_process", logger.Attrs{"export_id": exportID})
 
-		exportItem, err := o.process.Process(c, exportItem, lock)
-		if err != nil {
-			log.Error("export_process_error", logger.Attrs{"export_id": exportID, "error": err.Error()})
-			errors.ReturnError(c, &errors.Error{
-				Cause:   err.Error(),
-				Code:    errors.InternalServerApiError,
-				Message: fmt.Sprintf("error processing export %s", exportID),
-			})
-			return
-		}
+			exportItem, err := o.process.Process(c, exportItem, lock)
+			if err != nil {
+				log.Error("export_process_error", logger.Attrs{"export_id": exportID, "error": err.Error()})
+				return
+			}
 
-		if err = o.saveKvsItem(exportItem); err != nil {
-			godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, "results:error_save_kvs")
-			errors.ReturnError(c, &errors.Error{
-				Cause:   err.Error(),
-				Code:    errors.InternalServerApiError,
-				Message: fmt.Sprintf("error saving id %s to kvs", exportID),
-			})
-			return
-		}
+			if err := o.saveKvsItem(exportItem); err != nil {
+				godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, "results:error_save_kvs")
+				return
+			}
 
-		godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, "results:ok")
+			godog.RecordSimpleMetric(config.GodogExecuteMetric, 1, "results:ok")
+		}()
+
+		errors.ReturnError(c, &errors.Error{
+			Cause:   "export started",
+			Code:    errors.UnprocessableEntityApiError,
+			Message: fmt.Sprintf("executing export %s in background", exportID),
+		})
+		return
 	}
 
 	// The export was executed in the step before, or the current notified export was done prior to this
