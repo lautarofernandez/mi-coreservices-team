@@ -47,6 +47,10 @@ const (
 	// RoleWorker role will bootstrap the server in worker mode.
 	// This mode should be used only by endpoints that receive data from BigQ and do a specific task
 	RoleWorker Role = "worker"
+
+	// RoleMiddleEnd role will bootstrap the server in middleend mode.
+	// This mode should be used by middle end apps. It allow read & write traffic, it jumps over mlauth validation
+	RoleMiddleEnd Role = "middleend"
 )
 
 // ApplicationContext contains the necessary information for bootstraping the server
