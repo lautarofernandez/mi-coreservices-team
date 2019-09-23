@@ -33,6 +33,9 @@ var routes = RoutingGroup{
 	RoleWrite: func(g *gin.RouterGroup) {
 		g.GET("/test-write", okHandler)
 	},
+	RoleMiddleEnd: func(g *gin.RouterGroup) {
+		g.GET("/test-middleend", okHandler)
+	},
 }
 
 func TestNewEngine(t *testing.T) {
@@ -45,6 +48,7 @@ func TestNewEngine(t *testing.T) {
 		{"Read Role", "test-read", []string{"/ping", "/mpcs/test-read"}},
 		{"Search Role", "test-search", []string{"/ping", "/mpcs/test-search"}},
 		{"Write Role", "test-write", []string{"/ping", "/mpcs/test-write"}},
+		{"Middleend Role", "test-middleend", []string{"/ping", "/mpcs/test-middleend"}},
 	}
 
 	for _, tc := range tt {
