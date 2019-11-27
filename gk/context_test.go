@@ -16,7 +16,7 @@ import (
 )
 
 func TestHandler(t *testing.T) {
-	uuid := uuid.NewV4()
+	uuid, _ := uuid.NewV4()
 	reqID := uuid.String()
 
 	rr := httptest.NewRecorder()
