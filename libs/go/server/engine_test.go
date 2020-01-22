@@ -7,7 +7,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/gin-gonic/gin"
+
+	"github.com/mercadolibre/coreservices-team/libs/go/logger"
 )
 
 func init() {
@@ -180,4 +184,26 @@ func TestWithPushMetrics(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInvalidEnvironment(t *testing.T) {
+	ass := assert.New(t)
+	_, err := getEnvironmentSettings(ApplicationContext{
+		Environment: "invalid-environment",
+		Role:        "invalid-role",
+	})
+
+	ass.Equal("given environment do not exist for the current application context", err.Error())
+}
+
+func TestValidEnvironment(t *testing.T) {
+	ass := assert.New(t)
+
+	env, err := getEnvironmentSettings(ApplicationContext{
+		Environment: EnvSandbox,
+		Role:        RoleRead,
+	})
+
+	ass.Nil(err)
+	ass.Equal(logger.StatusInfo, env.LogLevel)
 }

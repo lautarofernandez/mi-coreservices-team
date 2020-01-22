@@ -26,6 +26,7 @@ var envSettings = map[Environment]settings{
 	EnvTest:        {LogLevel: "INFO", PushMetrics: true, Debug: true, AuthScopes: nil},
 	EnvIntegration: {LogLevel: "INFO", PushMetrics: false, Debug: true, AuthScopes: nil},
 	EnvProduction:  {LogLevel: "INFO", PushMetrics: true, Debug: false, AuthScopes: nil},
+	EnvSandbox :    {LogLevel: "INFO", PushMetrics: true, Debug: false, AuthScopes: nil},
 }
 
 // RoutingGroup is a map of urls and functions for a given role.
@@ -58,11 +59,16 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 		return nil, fmt.Errorf("given routes do not contain endpoints for the current application role")
 	}
 
+	// Get the Environment settings
+	var envSet settings
+	if envSet, err = getEnvironmentSettings(ctx); err != nil {
+		return nil, err
+	}
+
 	// Create server with default configuration for current environment
 	server := &Server{
 		Context: ctx,
-
-		settings: envSettings[ctx.Environment],
+		settings: envSet,
 	}
 
 	// Call option functions on instance before instantiating the server so that custom
@@ -119,6 +125,14 @@ func NewEngine(scope string, routes RoutingGroup, opts ...Opt) (*Server, error) 
 	fn(group)
 
 	return server, nil
+}
+
+func getEnvironmentSettings(ctx ApplicationContext) (settings, error) {
+	value, ok := envSettings[ctx.Environment]
+	if !ok {
+		return settings{}, fmt.Errorf("given environment do not exist for the current application context")
+	}
+	return value, nil
 }
 
 // WithAuthScopes func sets up required application authentication scopes.
