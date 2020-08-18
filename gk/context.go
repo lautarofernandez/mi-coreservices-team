@@ -44,7 +44,7 @@ type Context struct {
 	RequestID string
 	Log       *logger.Logger
 
-	nrTransaction newrelic.Transaction
+	NrTransaction newrelic.Transaction
 }
 
 // HandlerFunc defines the signature of our http handlers
@@ -77,15 +77,15 @@ func Handler(f HandlerFunc) gin.HandlerFunc {
 			Log: &logger.Logger{
 				Attributes: logger.Attrs{"request_id": reqID},
 			},
-			nrTransaction: nrgin.Transaction(c),
+			NrTransaction: nrgin.Transaction(c),
 		}
 
 		// Rename NewRelic transaction name to the name of the function that's being
 		// wrapped by our context.
-		if context.nrTransaction != nil {
+		if context.NrTransaction != nil {
 			splitURL := strings.Split(callerName, "/")
 			if len(splitURL) > 0 {
-				context.nrTransaction.SetName(splitURL[len(splitURL)-1])
+				context.NrTransaction.SetName(splitURL[len(splitURL)-1])
 			}
 		}
 
@@ -96,30 +96,30 @@ func Handler(f HandlerFunc) gin.HandlerFunc {
 // StartSegment makes it easy to instrument segments.
 // After starting a segment do `defer segment.End()`
 func (c *Context) StartSegment(name string) Segment {
-	return newrelic.StartSegment(c.nrTransaction, name)
+	return newrelic.StartSegment(c.NrTransaction, name)
 }
 
 // StartExternalSegment makes it easy to instrument segments that call external services.
 func (c *Context) StartExternalSegment(url string) Segment {
 	return &newrelic.ExternalSegment{
 		URL:       url,
-		StartTime: newrelic.StartSegmentNow(c.nrTransaction),
+		StartTime: newrelic.StartSegmentNow(c.NrTransaction),
 	}
 }
 
 // NoticeError records an error.  The first five errors per transaction are recorded.
 func (c *Context) NoticeError(err error) {
-	if c.nrTransaction == nil {
+	if c.NrTransaction == nil {
 		return
 	}
 
-	c.nrTransaction.NoticeError(err)
+	c.NrTransaction.NoticeError(err)
 }
 
 // DatastoreSegment records a segment pertaining an operation with a datastore
 func (c *Context) DatastoreSegment(db newrelic.DatastoreProduct, collection string, operation DBOperation) Segment {
 	return &newrelic.DatastoreSegment{
-		StartTime:  newrelic.StartSegmentNow(c.nrTransaction),
+		StartTime:  newrelic.StartSegmentNow(c.NrTransaction),
 		Product:    db,
 		Collection: collection,
 		Operation:  string(operation),
