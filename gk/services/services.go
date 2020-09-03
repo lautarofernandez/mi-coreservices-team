@@ -211,8 +211,12 @@ func (s *Services) Publisher(name string) (bq.Publisher, error) {
 		return nil, fmt.Errorf("service %s is of type %s, not Topic", name, svc.Type)
 	}
 
-	if mapContains(svc.SvcParams, "topic", "cluster") {
-		return bq.NewPublisher(svc.SvcParams["cluster"], []string{svc.SvcParams["topic"]}), nil
+	if mapContains(svc.SvcParams, "topic") {
+		pub, err := bq.NewSingleTopicPublisher(svc.SvcParams["topic"])
+		if err != nil {
+			err = fmt.Errorf("could not create BigQ publisher: %v", err)
+		}
+		return pub, err
 	}
 
 	return nil, fmt.Errorf("missing params for initializing BigQ publisher")
