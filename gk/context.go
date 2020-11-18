@@ -1,6 +1,7 @@
 package gk
 
 import (
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -9,16 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mercadolibre/coreservices-team/libs/go/logger"
 	"github.com/mercadolibre/go-meli-toolkit/mlauth"
-	"github.com/newrelic/go-agent"
-	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
+	"github.com/newrelic/go-agent/v3/integrations/nrgin"
 	"github.com/satori/go.uuid"
 )
 
 // Measurable is the interface of the exposed methods used for measuring
 // code execution time and reporting errors.
 type Measurable interface {
-	StartSegment(name string) Segment
-	StartExternalSegment(url string) Segment
+	StartSegment(name string) *newrelic.Segment
+	StartExternalSegment(url string) *newrelic.ExternalSegment
 	NoticeError(err error)
 }
 
@@ -44,7 +44,7 @@ type Context struct {
 	RequestID string
 	Log       *logger.Logger
 
-	NrTransaction newrelic.Transaction
+	NrTransaction *newrelic.Transaction
 }
 
 // HandlerFunc defines the signature of our http handlers
@@ -95,12 +95,12 @@ func Handler(f HandlerFunc) gin.HandlerFunc {
 
 // StartSegment makes it easy to instrument segments.
 // After starting a segment do `defer segment.End()`
-func (c *Context) StartSegment(name string) Segment {
+func (c *Context) StartSegment(name string) *newrelic.Segment {
 	return newrelic.StartSegment(c.NrTransaction, name)
 }
 
 // StartExternalSegment makes it easy to instrument segments that call external services.
-func (c *Context) StartExternalSegment(url string) Segment {
+func (c *Context) StartExternalSegment(url string) *newrelic.ExternalSegment {
 	return &newrelic.ExternalSegment{
 		URL:       url,
 		StartTime: newrelic.StartSegmentNow(c.NrTransaction),
@@ -117,7 +117,7 @@ func (c *Context) NoticeError(err error) {
 }
 
 // DatastoreSegment records a segment pertaining an operation with a datastore
-func (c *Context) DatastoreSegment(db newrelic.DatastoreProduct, collection string, operation DBOperation) Segment {
+func (c *Context) DatastoreSegment(db newrelic.DatastoreProduct, collection string, operation DBOperation) *newrelic.DatastoreSegment {
 	return &newrelic.DatastoreSegment{
 		StartTime:  newrelic.StartSegmentNow(c.NrTransaction),
 		Product:    db,

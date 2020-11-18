@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mercadolibre/coreservices-team/logging/metrics"
-	newrelic "github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 const (
@@ -115,10 +115,10 @@ func (context LogContext) Transaction(name string) LogContext {
 
 func (context LogContext) WithTransaction(trxName string, ginContext *gin.Context) LogContext {
 	if pushMetrics {
-		var transactionTrx newrelic.Transaction
+		var transactionTrx *newrelic.Transaction
 		transaction, castBool := ginContext.Get("NR_TXN")
 		if castBool {
-			transactionTrx = transaction.(newrelic.Transaction)
+			transactionTrx = transaction.(*newrelic.Transaction)
 			transactionTrx.SetName(trxName)
 		}
 		return LogContext{tags: context.tags, transaction: metrics.TrxWithTransaction(transactionTrx)}

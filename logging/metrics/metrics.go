@@ -10,7 +10,7 @@ import (
 	"github.com/mercadolibre/coreservices-team/logging/format"
 	"github.com/mercadolibre/go-meli-toolkit/gingonic/mlhandlers"
 	"github.com/mercadolibre/go-meli-toolkit/godog"
-	"github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 type Metric struct {
@@ -24,10 +24,10 @@ type Metrics struct {
 }
 
 type Transaction struct {
-	nrTrx newrelic.Transaction
+	nrTrx *newrelic.Transaction
 }
 
-var NewRelicApp newrelic.Application
+var NewRelicApp *newrelic.Application
 
 const (
 	FULL     = "F"
@@ -117,15 +117,23 @@ func GingonicHandlers() []gin.HandlerFunc {
 
 func InitNewRelic(debug bool, environment string, appName string, appKey string) error {
 	fmt.Println(environment)
-	config := newrelic.NewConfig(fmt.Sprintf("%s.%s", environment, appName), appKey)
-	if debug {
-		config.Logger = newrelic.NewDebugLogger(os.Stdout)
-	}
-	if app, err := newrelic.NewApplication(config); err != nil {
+
+	var configName = newrelic.ConfigAppName(fmt.Sprintf("%s.%s", environment, appName))
+	var configLicense = newrelic.ConfigLicense(appKey)
+
+	if app, err := newrelic.NewApplication(
+		configName,
+		configLicense,
+		func(config *newrelic.Config) {
+			if debug {
+				newrelic.ConfigDebugLogger(os.Stdout)
+			}
+		}); err != nil {
 		return fmt.Errorf("Could not create newrelic agent: %s", err)
 	} else {
 		NewRelicApp = app
 	}
+
 	return nil
 }
 
@@ -140,12 +148,12 @@ func ElapsedMilliseconds(t time.Time) float64 {
 }
 
 func Trx(id string) *Transaction {
-	nrTrx := NewRelicApp.StartTransaction(id, nil, nil)
+	nrTrx := NewRelicApp.StartTransaction(id)
 	return &Transaction{nrTrx}
 }
 
-func TrxWithTransaction(nrTrx newrelic.Transaction) *Transaction {
-	return &Transaction{nrTrx}
+func TrxWithTransaction(nrTrx *newrelic.Transaction) *Transaction {
+	return &Transaction{nrTrx: nrTrx}
 }
 
 func (trx *Transaction) Segment(name string) *Segment {
@@ -179,7 +187,9 @@ func (seg *Segment) End() {
 // Middleware to use with New Relic
 func NewRelic() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		txn := NewRelicApp.StartTransaction(c.Request.URL.String(), c.Writer, c.Request)
+		txn := NewRelicApp.StartTransaction(c.Request.URL.String())
+		txn.SetWebResponse(c.Writer)
+		txn.SetWebRequestHTTP(c.Request)
 		defer txn.End()
 		c.Set("NR_TXN", txn)
 		c.Next()
