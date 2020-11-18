@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/mercadolibre/coreservices-team/migrator/process"
-	"github.com/mercadolibre/coreservices-team/migrator/test/tasks"
+	"github.com/mercadolibre/coreservices-team/migrator/test/task"
 )
 
 func main() {

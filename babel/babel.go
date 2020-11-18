@@ -93,7 +93,7 @@ func addTranslation(locale string, reader io.Reader) error {
 		return err
 	}
 	po := new(gotext.Po)
-	po.Parse(pluralForm + string(content))
+	po.Parse([]byte(pluralForm + string(content)))
 	translations[locale] = po
 	return nil
 }

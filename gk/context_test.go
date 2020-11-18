@@ -9,10 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mercadolibre/coreservices-team/gk"
 	"github.com/mercadolibre/coreservices-team/libs/go/logger"
-	newrelic "github.com/newrelic/go-agent"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestHandler(t *testing.T) {
@@ -41,10 +39,6 @@ func TestHandler(t *testing.T) {
 
 		assert.Implements(t, (*gk.Measurable)(nil), ctx)
 
-		// Dummy calls to simple methods to increase coverage
-		require.NoError(t, ctx.StartSegment("test segment").End())
-		require.NoError(t, ctx.StartExternalSegment("test external segment").End())
-		require.NoError(t, ctx.DatastoreSegment(newrelic.DatastoreCassandra, "test-collection", gk.Select).End())
 		ctx.NoticeError(fmt.Errorf("Test error"))
 	})(c)
 }

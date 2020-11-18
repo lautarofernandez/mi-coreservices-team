@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mercadolibre/coreservices-team/libs/go/errors"
 	"github.com/mercadolibre/go-meli-toolkit/mlauth"
-	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
+	"github.com/newrelic/go-agent/v3/integrations/nrgin"
 )
 
 const (
